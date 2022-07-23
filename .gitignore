@@ -1,3 +1,4 @@
-artifacts.mp4
+artifacts.*
 valid_frames/
+artifacts/
 .venv/
