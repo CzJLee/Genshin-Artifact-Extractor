@@ -296,7 +296,7 @@ def main(video_path, artifact_dir = None):
     write_json(artifacts)
 
 if __name__ == "__main__":
-    # main("artifacts.mp4", artifact_dir="artifacts")
+    main("artifacts.mov", artifact_dir="artifacts")
 
     artifacts = load_json("artifacts.json")
     all_artifacts = []

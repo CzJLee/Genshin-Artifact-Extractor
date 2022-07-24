@@ -3,3 +3,4 @@ artifacts/
 .venv/
 test.*
 artifacts_good_format.json
+gi_data_updated.json

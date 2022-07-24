@@ -401,8 +401,6 @@ class Artifact():
             match = re.match("([\w\s]+)\+([\d.%]+)", substat)
             substat_type = match.group(1)
             substat_value = match.group(2)
-            print(substat_type)
-            print(substat_value)
             if substat_value.endswith("%"):
                 substat_value = substat_value.strip("%")
                 substat_type += "%"
