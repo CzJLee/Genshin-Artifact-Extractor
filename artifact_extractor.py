@@ -9,12 +9,14 @@ import string
 import tempfile
 from fastprogress import fastprogress
 
+import artifact
+
 # MAGIC NUMBERS
 roi = (1217, 153, 612, 1135)
 
 rois = {
-    "artifact_name" :   (  28,   77,  365,   46),
-    "type" :            (  26,  183,  254,   37),
+    "artifact_type" :   (  28,   77,  320,   46),
+    "main_stat" :       (  26,  183,  300,   37),
     "value" :           (  26,  219,  208,   62),
     "level" :           (  38,  385,   65,   30),
     "rarity":           (  26,  290,  254,   45),
@@ -26,36 +28,12 @@ rois = {
 }
 
 # Constants
-light_text = ["artifact_name", "level", "type", "value"]
+light_text = ["artifact_type", "level", "main_stat", "value"]
 dark_text = ["equipped", "set_name_3", "set_name_4", "substats_3", "substats_4"]
 
-whitelist = set(string.ascii_letters + string.digits + string.whitespace + ".,+%\':")
+whitelist = set(string.ascii_letters + string.digits + string.whitespace + ".,+-%\':")
 
-with open("ArtifactInfo.json") as f:
-    artifact_info = json.loads(f.read())
 
-class Artifact():
-    def __init__(self):
-        self.artifact_name = None
-        self.level = None
-        self.type = None
-        self.value = None
-        self.set_name = None
-        self.substats = None
-        self.equipped = None
-
-        self.file_path = None
-
-    def to_dict(self):
-        return {
-            "artifact_name" : self.artifact_name,
-            "level" : self.level,
-            "type" : self.type,
-            "value" : self.value,
-            "set_name" : self.set_name,
-            "substats" : self.substats,
-            "equipped" : self.equipped
-        }
 
 def video_to_frames(input_file_path, output_dir, verbose = True):
     """Function to extract frames from input video file
@@ -132,7 +110,8 @@ def remove_duplicate_frames(cropped_frames_dir, output_dir):
     output_dir = pathlib.Path(output_dir)
     hashes = set()
     valid_frames = []
-
+    
+    previous_hash = None
     cropped_frames_dir = pathlib.Path(cropped_frames_dir)
     for img_path in sorted(cropped_frames_dir.iterdir()):
         if img_path.suffix == ".jpg":
@@ -140,12 +119,17 @@ def remove_duplicate_frames(cropped_frames_dir, output_dir):
             img_hash = cv2.img_hash.pHash(image)
             img_hash = tuple(img_hash[0])
 
-            if img_hash not in hashes:
+            if img_hash != previous_hash:
                 valid_frames.append(img_path)
-                hashes.add(img_hash)
                 print(f"{img_path.name} : {img_hash}")
+                previous_hash = img_hash
 
-    print(f"Found {len(hashes)} artifacts")
+            # if img_hash not in hashes:
+            #     valid_frames.append(img_path)
+            #     hashes.add(img_hash)
+            #     print(f"{img_path.name} : {img_hash}")
+
+    print(f"Found {len(valid_frames)} artifacts")
 
     for img_path in valid_frames:
         shutil.copy(img_path, output_dir / img_path.name)
@@ -272,6 +256,10 @@ def write_json(artifacts, save_file_path = "artifacts.json"):
     with open(save_file_path, "w") as f:
        json.dump(artifacts, f, indent=4)
 
+def load_json(save_file_path = "artifacts.json"):
+    with open(save_file_path) as f:
+        return json.loads(f.read())
+
 verbose = True
 def main(video_path, artifact_dir = None):
     video_path = pathlib.Path(video_path)
@@ -308,22 +296,25 @@ def main(video_path, artifact_dir = None):
     write_json(artifacts)
 
 if __name__ == "__main__":
-    main("artifacts.mp4", artifact_dir="artifacts")
+    # main("artifacts.mp4", artifact_dir="artifacts")
+
+    artifacts = load_json("artifacts.json")
+    all_artifacts = []
+    previous_artifact = None
+    count = 0
+    for id, ocr_json in artifacts.items():
+        count += 1
+        sample_artifact = artifact.Artifact.from_ocr_json(ocr_json)
+        if sample_artifact != previous_artifact:
+            all_artifacts.append(sample_artifact)
+            previous_artifact = sample_artifact
+
+    print(f"Found {len(all_artifacts)} total artifacts")
+    print(f"Rejected {count - len(all_artifacts)} of {count} total.")
+    artifact.artifact_list_to_good_format_json(all_artifacts)
 
 
-    # get_artifact_components("artifacts/valid_frames", "artifacts/artifacts")
+    print(all_artifacts[0])
 
-    # artifacts = extract_text_dir("artifacts/artifacts")
-    # write_json(artifacts)
 
-    # ocr_dir = pathlib.Path("artifacts/artifacts/")
-
-    # artifacts = extract_text_dir(ocr_dir)
-    # write_json(artifacts)
-
-    # test_artifact = {'artifact_name': 'Flower of Life', 'level': '+0', 'type': 'HP', 'value': 'Wi', 'equipped': 'er to make wishes come true.', 'set_name_3': "Shimenawa's Reminiscence:", 'set_name_4': ' 2Piece Set: ATK +18%,', 'substats_3': 'Energy Recharge+5.8%\nCRIT DMG+5.4%\nATK+19', 'substats_4': "Energy Recharge+5.8%\nCRIT DMG+5.4%\n\nATK+19\n\n1imenawa's Reminiscence:"}
-    # write_json(test_artifact)
-    # test_artifact = ocr_artifact("artifacts/artifacts/1460")
-    # write_json(test_artifact)
-    # print(test_artifact)
 

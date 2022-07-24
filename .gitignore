@@ -1,4 +1,5 @@
 artifacts.*
-valid_frames/
 artifacts/
 .venv/
+test.*
+artifacts_good_format.json

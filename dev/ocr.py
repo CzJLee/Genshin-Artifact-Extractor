@@ -34,7 +34,7 @@ def process_dark(file_path):
     return image
 
 
-light_text = ["artifact_name", "level", "type", "value"]
+light_text = ["artifact_type", "level", "type", "value"]
 dark_text = ["equipped", "set_name_3", "set_name_4", "substats_3", "substats_4"]
 
 # for file_stem in light_text:

@@ -35,7 +35,7 @@ def crop_roi(image, roi):
 # print(roi)
 
 rois = {
-    "artifact_name" :   (  28,   77,  365,   46),
+    "artifact_type" :   (  28,   77,  365,   46),
     "type" :            (  26,  183,  254,   37),
     "value" :           (  32,  219,  202,   62),
     "level" :           (  38,  385,   65,   30),
