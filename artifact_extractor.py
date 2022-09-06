@@ -11,6 +11,8 @@ from fastprogress import fastprogress
 
 import artifact
 
+from utils import write_json, load_json
+
 # MAGIC NUMBERS
 roi = (1217, 153, 612, 1135)
 
@@ -251,14 +253,24 @@ def extract_text_dir(ocr_dir, verbose = True):
 
     return artifacts
 
-def write_json(artifacts, save_file_path = "artifacts.json"):
-    save_file_path = pathlib.Path(save_file_path)
-    with open(save_file_path, "w") as f:
-       json.dump(artifacts, f, indent=4)
+# def write_json(artifacts, save_file_path = "artifacts.json"):
+#     save_file_path = pathlib.Path(save_file_path)
+#     with open(save_file_path, "w") as f:
+#        json.dump(artifacts, f, indent=4)
 
-def load_json(save_file_path = "artifacts.json"):
-    with open(save_file_path) as f:
-        return json.loads(f.read())
+# def load_json(save_file_path = "artifacts.json"):
+#     with open(save_file_path) as f:
+#         return json.loads(f.read())
+
+def replace_artifacts(gi_data_path, all_artifacts_json = "artifacts_good_format.json", updated_gi_data_path = "gi_data_updated.json"):
+    gi_data = load_json(gi_data_path)
+
+    all_artifacts = load_json(all_artifacts_json)
+
+    # Replace data
+    gi_data["artifacts"] = all_artifacts["artifacts"]
+
+    write_json(gi_data, updated_gi_data_path)
 
 verbose = True
 def main(video_path, artifact_dir = None):
@@ -296,7 +308,7 @@ def main(video_path, artifact_dir = None):
     write_json(artifacts)
 
 if __name__ == "__main__":
-    main("artifacts.mov", artifact_dir="artifacts")
+    main("artifacts.MOV", artifact_dir="artifacts")
 
     artifacts = load_json("artifacts.json")
     all_artifacts = []
@@ -313,8 +325,6 @@ if __name__ == "__main__":
     print(f"Rejected {count - len(all_artifacts)} of {count} total.")
     artifact.artifact_list_to_good_format_json(all_artifacts)
 
-
     print(all_artifacts[0])
 
-
-
+    replace_artifacts(gi_data_path = "/Users/Christian/Downloads/Database_3_2022-08-24_05-05-50.json")
