@@ -8,12 +8,14 @@ import pytesseract
 import string
 import tempfile
 import re
+import os
 from tqdm import tqdm
 from fastprogress import fastprogress
 
 import artifact
 
 from typing import Dict, List, Union, Any, Optional
+PathLike = Union[str, os.PathLike]
 
 from utils import write_json, load_json
 
@@ -42,7 +44,7 @@ whitelist = set(string.ascii_letters + string.digits + string.whitespace + ".,+-
 
 
 
-def video_to_frames(input_file_path, output_dir, verbose = True):
+def video_to_frames(input_file_path: PathLike, output_dir: PathLike, verbose = True) -> None:
     """Function to extract frames from input video file
     and save them as separate frames in an output directory.
     Args:
@@ -101,7 +103,7 @@ def video_to_frames(input_file_path, output_dir, verbose = True):
         print ("It took %d seconds for conversion." % (time_end-time_start))
     # break
 
-def crop_roi(image, roi):
+def crop_roi(image: np.ndarray, roi: List[int]) -> np.ndarray:
     return image[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
 
 # def crop_frames(frames_dir, output_dir):
@@ -115,7 +117,7 @@ def crop_roi(image, roi):
 #             cropped_img = crop_roi(image, roi)
 #             cv2.imwrite(str(output_dir / img_path.name), cropped_img)
 
-def remove_duplicate_frames(cropped_frames_dir, output_dir, verbose = True):
+def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
     output_dir = pathlib.Path(output_dir)
     hashes = set()
     valid_frames = []
@@ -141,7 +143,7 @@ def remove_duplicate_frames(cropped_frames_dir, output_dir, verbose = True):
     for img_path in valid_frames:
         shutil.copy(img_path, output_dir / img_path.name)
 
-def get_artifact_components(frames_dir, output_dir, verbose = True):
+def get_artifact_components(frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
     # Crop all images
     frames_dir = pathlib.Path(frames_dir)
     output_dir = pathlib.Path(output_dir)
@@ -181,7 +183,7 @@ def _get_rarity_blob_detector():
     detector = cv2.SimpleBlobDetector_create(params)
     return detector
 
-def process_rarity(file_path):
+def process_rarity(file_path: PathLike) -> int:
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY_INV)
@@ -196,7 +198,7 @@ def process_rarity(file_path):
     keypoints = detector.detect(image)
     return len(keypoints)
 
-def _process_light_text(file_path):
+def _process_light_text(file_path: PathLike) -> np.ndarray:
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY_INV)
@@ -208,7 +210,7 @@ def _process_light_text(file_path):
     cv2.imwrite(str(file_path.parent / f"{file_path.stem}_thresh.jpg"), image)
     return image
 
-def _process_dark_text(file_path):
+def _process_dark_text(file_path: PathLike) -> np.ndarray:
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 180, 255, cv2.THRESH_BINARY)
@@ -219,7 +221,7 @@ def _process_dark_text(file_path):
     cv2.imwrite(str(file_path.parent / f"{file_path.stem}_thresh.jpg"), image)
     return image
 
-def _get_ocr_text(image):
+def _get_ocr_text(image: np.ndarray) -> str:
     # Config: https://stackoverflow.com/questions/44619077/pytesseract-ocr-multiple-config-options
     config="--psm 6"
     ocr_text = pytesseract.image_to_string(image, lang = "genshin", config=config)
@@ -227,7 +229,7 @@ def _get_ocr_text(image):
     ocr_text = "".join(char for char in ocr_text if char in whitelist)
     return ocr_text
 
-def ocr_artifact(artifact_dir) -> Dict[str, list]:
+def ocr_artifact(artifact_dir: PathLike) -> Dict[str, Union[str, list]]:
     artifact_dir = pathlib.Path(artifact_dir)
     artifact_text = {}
     for artifact_component in light_text:
@@ -248,7 +250,7 @@ def ocr_artifact(artifact_dir) -> Dict[str, list]:
     artifact_text["substats_4"] = [x for x in artifact_text["substats_4"].split("\n") if x]
     return artifact_text
 
-def extract_text_dir(ocr_dir, verbose = True) -> Dict[str, Dict[str, list]]:
+def extract_text_dir(ocr_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
     print("Running OCR...")
     ocr_dir = pathlib.Path(ocr_dir)
     artifacts = {}
@@ -270,7 +272,11 @@ def extract_text_dir(ocr_dir, verbose = True) -> Dict[str, Dict[str, list]]:
 #     with open(save_file_path) as f:
 #         return json.loads(f.read())
 
-def replace_artifacts(gi_data_path, all_artifacts_json = "artifacts_good_format.json", updated_gi_data_path = "gi_data_updated.json"):
+def replace_artifacts(gi_data_path: PathLike, 
+    all_artifacts_json = "artifacts_good_format.json", 
+    updated_gi_data_path = "gi_data_updated.json"
+    ) -> None:
+
     gi_data = load_json(gi_data_path)
 
     all_artifacts = load_json(all_artifacts_json)
@@ -291,7 +297,7 @@ def remove_duplicate_artifacts(artifacts: Dict[str, Dict[str, list]]) -> List[ar
 
     return all_artifacts
 
-def main(video_path = "artifacts.MOV", artifact_dir = None, verbose = True):
+def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, verbose = True) -> None:
     video_path = pathlib.Path(video_path)
 
     if artifact_dir is None:
