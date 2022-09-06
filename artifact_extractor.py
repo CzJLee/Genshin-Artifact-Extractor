@@ -66,26 +66,28 @@ def video_to_frames(input_file_path, output_dir, verbose = True):
         print ("Number of frames: ", video_length)
     count = 0
     if verbose:
-        print ("Converting video..\n")
+        print ("Converting video..")
     # Start converting the video
     success, frame = cap.read()
 
-    while success:
-        # Extract the frame
-        # ret, frame = cap.read()
-        # if not ret:
-        #     # Continue if bad frame
-        #     count = count + 1
+    with tqdm(total = video_length) as pbar:
+        while success:
+            # Extract the frame
+            # ret, frame = cap.read()
+            # if not ret:
+            #     # Continue if bad frame
+            #     count = count + 1
 
-        #     continue
-        # Write the results back to output location.
-        if verbose:
-            # print(output_dir / f"{(count+1):0>4d}.jpg")
-            print(f"Reading frame {(count+1):0>4d} / {video_length}")
-        frame = crop_roi(frame, roi)
-        cv2.imwrite(str(output_dir / f"{(count+1):0>4d}.jpg"), frame)
-        count = count + 1
-        success, frame = cap.read()
+            #     continue
+            # Write the results back to output location.
+            # if verbose:
+            #     # print(output_dir / f"{(count+1):0>4d}.jpg")
+            #     print(f"Reading frame {(count+1):0>4d} / {video_length}")
+            frame = crop_roi(frame, roi)
+            cv2.imwrite(str(output_dir / f"{(count+1):0>4d}.jpg"), frame)
+            count = count + 1
+            pbar.update()
+            success, frame = cap.read()
 
     # # If there are no more frames left
     # if (count > (video_length-1)):
@@ -102,16 +104,16 @@ def video_to_frames(input_file_path, output_dir, verbose = True):
 def crop_roi(image, roi):
     return image[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
 
-def crop_frames(frames_dir, output_dir):
-    # Crop all images
-    frames_dir = pathlib.Path(frames_dir)
-    output_dir = pathlib.Path(output_dir)
-    for img_path in sorted(frames_dir.iterdir()):
-        if img_path.suffix == ".jpg":
-            print(img_path.name)
-            image = cv2.imread(str(img_path))
-            cropped_img = crop_roi(image, roi)
-            cv2.imwrite(str(output_dir / img_path.name), cropped_img)
+# def crop_frames(frames_dir, output_dir):
+#     # Crop all images
+#     frames_dir = pathlib.Path(frames_dir)
+#     output_dir = pathlib.Path(output_dir)
+#     for img_path in sorted(frames_dir.iterdir()):
+#         if img_path.suffix == ".jpg":
+#             print(img_path.name)
+#             image = cv2.imread(str(img_path))
+#             cropped_img = crop_roi(image, roi)
+#             cv2.imwrite(str(output_dir / img_path.name), cropped_img)
 
 def remove_duplicate_frames(cropped_frames_dir, output_dir, verbose = True):
     output_dir = pathlib.Path(output_dir)
@@ -131,7 +133,7 @@ def remove_duplicate_frames(cropped_frames_dir, output_dir, verbose = True):
             # Eliminate frames if the current img hash is equal to the previous hash.
             if img_hash != previous_hash:
                 valid_frames.append(img_path)
-                print(f"{img_path.name} : {img_hash}")
+                # print(f"{img_path.name} : {img_hash}")
                 previous_hash = img_hash
 
     print(f"Found {len(valid_frames)} artifacts")
@@ -147,7 +149,7 @@ def get_artifact_components(frames_dir, output_dir, verbose = True):
         print("Getting artifact component crops...")
     for img_path in tqdm(sorted(frames_dir.iterdir())):
         if img_path.suffix == ".jpg":
-            print(img_path.name)
+            # print(img_path.name)
             image = cv2.imread(str(img_path))
             img_crop_dir = output_dir / img_path.stem
             img_crop_dir.mkdir(exist_ok=True, parents=True)
@@ -247,14 +249,15 @@ def ocr_artifact(artifact_dir) -> Dict[str, list]:
     return artifact_text
 
 def extract_text_dir(ocr_dir, verbose = True) -> Dict[str, Dict[str, list]]:
+    print("Running OCR...")
     ocr_dir = pathlib.Path(ocr_dir)
     artifacts = {}
-    for artifact_dir in sorted(ocr_dir.iterdir()):
+    for artifact_dir in tqdm(sorted(ocr_dir.iterdir())):
         if artifact_dir.is_dir():
             artifact_text = ocr_artifact(artifact_dir)
             artifacts[artifact_dir.stem] = artifact_text
-            if verbose:
-                print(artifact_text)
+            # if verbose:
+            #     print(artifact_text)
 
     return artifacts
 
@@ -329,11 +332,10 @@ def main(video_path = "artifacts.MOV", artifact_dir = None, verbose = True):
 if __name__ == "__main__":
     download_dir = pathlib.Path("~/Downloads").expanduser()
 
-    main(download_dir / "artifacts.MOV")
 
     # Find most recently downloaded GI Database
     database_files = []
-    for file in download_dir:
+    for file in download_dir.iterdir():
         if re.fullmatch("Database_\d+_([-_\d]+).json", file.name):
             database_files.append(file)
     database_files.sort()
@@ -341,6 +343,10 @@ if __name__ == "__main__":
         gi_data_path = database_files[-1]
     else:
         print("No Database Found.")
+
+    print(f"Using: {gi_data_path}")
+    
+    main(download_dir / "artifacts.MOV")
 
     replace_artifacts(gi_data_path = gi_data_path, 
         all_artifacts_json="artifacts_good_format.json", 
