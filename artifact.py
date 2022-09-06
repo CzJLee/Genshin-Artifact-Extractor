@@ -439,7 +439,7 @@ class Artifact():
             equipped = ocr_json["equipped"]
         )
 
-def artifact_list_to_good_format_json(artifact_list: list[Artifact], output_path = "artifacts_good_format.json"):
+def artifact_list_to_good_format_json(artifact_list: list[Artifact], output_path = "artifacts_good_format.json", verbose = True):
     artifact_list_good_format = []
     for artifact in artifact_list:
         artifact_list_good_format.append(artifact.to_good_format())
@@ -452,3 +452,5 @@ def artifact_list_to_good_format_json(artifact_list: list[Artifact], output_path
     }
 
     utils.write_json(artifacts_good_format, output_path)
+    if verbose:
+        print(f"Created updated GI Database: {output_path}")
