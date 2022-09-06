@@ -7,15 +7,20 @@ import shutil
 import pytesseract
 import string
 import tempfile
+import re
+from tqdm import tqdm
 from fastprogress import fastprogress
 
 import artifact
+
+from typing import Dict, List, Union, Any, Optional
 
 from utils import write_json, load_json
 
 # MAGIC NUMBERS
 roi = (1217, 153, 612, 1135)
 
+# Crop Region of Interest for iPad
 rois = {
     "artifact_type" :   (  28,   77,  320,   46),
     "main_stat" :       (  26,  183,  300,   37),
@@ -108,39 +113,39 @@ def crop_frames(frames_dir, output_dir):
             cropped_img = crop_roi(image, roi)
             cv2.imwrite(str(output_dir / img_path.name), cropped_img)
 
-def remove_duplicate_frames(cropped_frames_dir, output_dir):
+def remove_duplicate_frames(cropped_frames_dir, output_dir, verbose = True):
     output_dir = pathlib.Path(output_dir)
     hashes = set()
     valid_frames = []
     
     previous_hash = None
     cropped_frames_dir = pathlib.Path(cropped_frames_dir)
-    for img_path in sorted(cropped_frames_dir.iterdir()):
+    if verbose:
+        print("Removing duplicate frames...")
+    for img_path in tqdm(sorted(cropped_frames_dir.iterdir())):
         if img_path.suffix == ".jpg":
             image = cv2.imread(str(img_path))
             img_hash = cv2.img_hash.pHash(image)
             img_hash = tuple(img_hash[0])
 
+            # Eliminate frames if the current img hash is equal to the previous hash.
             if img_hash != previous_hash:
                 valid_frames.append(img_path)
                 print(f"{img_path.name} : {img_hash}")
                 previous_hash = img_hash
-
-            # if img_hash not in hashes:
-            #     valid_frames.append(img_path)
-            #     hashes.add(img_hash)
-            #     print(f"{img_path.name} : {img_hash}")
 
     print(f"Found {len(valid_frames)} artifacts")
 
     for img_path in valid_frames:
         shutil.copy(img_path, output_dir / img_path.name)
 
-def get_artifact_components(frames_dir, output_dir):
+def get_artifact_components(frames_dir, output_dir, verbose = True):
     # Crop all images
     frames_dir = pathlib.Path(frames_dir)
     output_dir = pathlib.Path(output_dir)
-    for img_path in sorted(frames_dir.iterdir()):
+    if verbose:
+        print("Getting artifact component crops...")
+    for img_path in tqdm(sorted(frames_dir.iterdir())):
         if img_path.suffix == ".jpg":
             print(img_path.name)
             image = cv2.imread(str(img_path))
@@ -150,7 +155,7 @@ def get_artifact_components(frames_dir, output_dir):
                 cropped_img = crop_roi(image, roi)
                 cv2.imwrite(str(img_crop_dir / f"{key}.jpg"), cropped_img)
 
-def get_rarity_blob_detector():
+def _get_rarity_blob_detector():
     # We are looking for star shapes
     # Set up the detector with default parameters.
     params = cv2.SimpleBlobDetector_Params()
@@ -185,11 +190,11 @@ def process_rarity(file_path):
     image = cv2.dilate(image, kernel, iterations=1)
     
     # Detect blobs.
-    detector = get_rarity_blob_detector()
+    detector = _get_rarity_blob_detector()
     keypoints = detector.detect(image)
     return len(keypoints)
 
-def process_light(file_path):
+def _process_light_text(file_path):
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY_INV)
@@ -201,7 +206,7 @@ def process_light(file_path):
     cv2.imwrite(str(file_path.parent / f"{file_path.stem}_thresh.jpg"), image)
     return image
 
-def process_dark(file_path):
+def _process_dark_text(file_path):
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 180, 255, cv2.THRESH_BINARY)
@@ -212,7 +217,7 @@ def process_dark(file_path):
     cv2.imwrite(str(file_path.parent / f"{file_path.stem}_thresh.jpg"), image)
     return image
 
-def get_ocr_text(image):
+def _get_ocr_text(image):
     # Config: https://stackoverflow.com/questions/44619077/pytesseract-ocr-multiple-config-options
     config="--psm 6"
     ocr_text = pytesseract.image_to_string(image, lang = "genshin", config=config)
@@ -220,17 +225,17 @@ def get_ocr_text(image):
     ocr_text = "".join(char for char in ocr_text if char in whitelist)
     return ocr_text
 
-def ocr_artifact(artifact_dir):
+def ocr_artifact(artifact_dir) -> Dict[str, list]:
     artifact_dir = pathlib.Path(artifact_dir)
     artifact_text = {}
     for artifact_component in light_text:
-        processed_image = process_light(artifact_dir / (artifact_component + ".jpg"))
-        ocr_text = get_ocr_text(processed_image)
+        processed_image = _process_light_text(artifact_dir / (artifact_component + ".jpg"))
+        ocr_text = _get_ocr_text(processed_image)
         artifact_text[artifact_component] = ocr_text
 
     for artifact_component in dark_text:
-        processed_image = process_dark(artifact_dir / (artifact_component + ".jpg"))
-        ocr_text = get_ocr_text(processed_image)
+        processed_image = _process_dark_text(artifact_dir / (artifact_component + ".jpg"))
+        ocr_text = _get_ocr_text(processed_image)
         artifact_text[artifact_component] = ocr_text
 
     rarity = process_rarity(artifact_dir / ("rarity" + ".jpg"))
@@ -241,7 +246,7 @@ def ocr_artifact(artifact_dir):
     artifact_text["substats_4"] = [x for x in artifact_text["substats_4"].split("\n") if x]
     return artifact_text
 
-def extract_text_dir(ocr_dir, verbose = True):
+def extract_text_dir(ocr_dir, verbose = True) -> Dict[str, Dict[str, list]]:
     ocr_dir = pathlib.Path(ocr_dir)
     artifacts = {}
     for artifact_dir in sorted(ocr_dir.iterdir()):
@@ -272,8 +277,18 @@ def replace_artifacts(gi_data_path, all_artifacts_json = "artifacts_good_format.
 
     write_json(gi_data, updated_gi_data_path)
 
-verbose = True
-def main(video_path, artifact_dir = None):
+def remove_duplicate_artifacts(artifacts: Dict[str, Dict[str, list]]) -> List[artifact.Artifact]:
+    all_artifacts = []
+    previous_artifact = None
+    for id, ocr_json in artifacts.items():
+        sample_artifact = artifact.Artifact.from_ocr_json(ocr_json)
+        if sample_artifact != previous_artifact:
+            all_artifacts.append(sample_artifact)
+            previous_artifact = sample_artifact
+
+    return all_artifacts
+
+def main(video_path = "artifacts.MOV", artifact_dir = None, verbose = True):
     video_path = pathlib.Path(video_path)
 
     if artifact_dir is None:
@@ -291,40 +306,43 @@ def main(video_path, artifact_dir = None):
     video_output_dir.mkdir(exist_ok=True, parents=True)
     video_to_frames(video_path, video_output_dir)
 
-    # # Crop extracted frames
-    # cropped_frames_dir = temp_dir / "cropped_frames"
-    # cropped_frames_dir.mkdir(exist_ok=True, parents=True)
-    # crop_frames(video_output_dir, cropped_frames_dir)
-
+    # Remove duplicate frames using image hashes
     valid_frames_dir = artifact_dir / "valid_frames"
     valid_frames_dir.mkdir(exist_ok=True, parents=True)
     remove_duplicate_frames(video_output_dir, valid_frames_dir)
 
+    # Get artifact component crops
     ocr_dir = artifact_dir / "artifacts"
     ocr_dir.mkdir(exist_ok=True, parents=True)
     get_artifact_components(valid_frames_dir, ocr_dir)
 
+    # Run OCR
     artifacts = extract_text_dir(ocr_dir)
-    write_json(artifacts)
+
+    # Remove duplicate artifacts
+    all_artifacts = remove_duplicate_artifacts(artifacts=artifacts)
+    print(f"Found {len(all_artifacts)} total artifacts")
+
+    # Save artifacts to good format
+    artifact.artifact_list_to_good_format_json(all_artifacts, output_path="artifacts_good_format.json")
 
 if __name__ == "__main__":
-    main("artifacts.MOV", artifact_dir="artifacts")
+    download_dir = pathlib.Path("~/Downloads").expanduser()
 
-    artifacts = load_json("artifacts.json")
-    all_artifacts = []
-    previous_artifact = None
-    count = 0
-    for id, ocr_json in artifacts.items():
-        count += 1
-        sample_artifact = artifact.Artifact.from_ocr_json(ocr_json)
-        if sample_artifact != previous_artifact:
-            all_artifacts.append(sample_artifact)
-            previous_artifact = sample_artifact
+    main(download_dir / "artifacts.MOV")
 
-    print(f"Found {len(all_artifacts)} total artifacts")
-    print(f"Rejected {count - len(all_artifacts)} of {count} total.")
-    artifact.artifact_list_to_good_format_json(all_artifacts)
+    # Find most recently downloaded GI Database
+    database_files = []
+    for file in download_dir:
+        if re.fullmatch("Database_\d+_([-_\d]+).json", file.name):
+            database_files.append(file)
+    database_files.sort()
+    if database_files:
+        gi_data_path = database_files[-1]
+    else:
+        print("No Database Found.")
 
-    print(all_artifacts[0])
-
-    replace_artifacts(gi_data_path = "/Users/Christian/Downloads/Database_3_2022-08-24_05-05-50.json")
+    replace_artifacts(gi_data_path = gi_data_path, 
+        all_artifacts_json="artifacts_good_format.json", 
+        updated_gi_data_path="gi_data_updated.json")
+ 
