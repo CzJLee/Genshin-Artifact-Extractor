@@ -103,7 +103,10 @@ _valid_set_name = {
     "Husk of Opulent Dreams", 
     "Ocean-Hued Clam", 
     "Echoes of an Offering", 
-    "Vermillion Hereafter"
+    "Vermillion Hereafter",
+    "Retracing Bolide",
+    "Deepwood Memories",
+    "Gilded Dreams"
 }
 
 # Valid substats
