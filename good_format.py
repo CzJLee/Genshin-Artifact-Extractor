@@ -20,7 +20,10 @@ setKey = {
     "Husk of Opulent Dreams": "HuskOfOpulentDreams",
     "Ocean-Hued Clam": "OceanHuedClam",
     "Echoes of an Offering": "EchoesOfAnOffering",
-    "Vermillion Hereafter": "VermillionHereafter"
+    "Vermillion Hereafter": "VermillionHereafter",
+    "Retracing Bolide": "RetracingBolide",
+    "Deepwood Memories": "DeepwoodMemories",
+    "Gilded Dreams": "GildedDreams"
 }
 
 slotKey = {
@@ -45,6 +48,7 @@ statKey = {
     "Hydro DMG Bonus%": "hydro_dmg_",
     "Anemo DMG Bonus%": "anemo_dmg_",
     "Geo DMG Bonus%": "geo_dmg_",
+    "Dendro DMG Bonus%": "dendro_dmg_",
     "Elemental Mastery": "eleMas",
     "Energy Recharge%": "enerRech_",
     "CRIT Rate%": "critRate_",
@@ -61,8 +65,10 @@ location = {
     "Beidou": "Beidou",
     "Bennett": "Bennett",
     "Chongyun": "Chongyun",
+    "Collei": "Collei",
     "Diluc": "Diluc",
     "Diona": "Diona",
+    "Dori": "Dori",
     "Eula": "Eula",
     "Fischl": "Fischl",
     "Ganyu": "Ganyu",
@@ -91,6 +97,7 @@ location = {
     "Shenhe": "Shenhe",
     "Sucrose": "Sucrose",
     "Tartaglia": "Tartaglia",
+    "Tighnari": "Tighnari",
     "Thoma": "Thoma",
     "Crazy": "Traveler",
     "Venti": "Venti",
