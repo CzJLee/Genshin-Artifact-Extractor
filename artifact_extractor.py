@@ -273,8 +273,9 @@ def extract_text_dir(ocr_dir: PathLike, verbose = True) -> Dict[str, Dict[str, l
 #         return json.loads(f.read())
 
 def replace_artifacts(gi_data_path: PathLike, 
-    all_artifacts_json = "artifacts_good_format.json", 
-    updated_gi_data_path = "gi_data_updated.json"
+                      all_artifacts_json = "artifacts_good_format.json", 
+                      updated_gi_data_path = "gi_data_updated.json",
+                      verbose = True
     ) -> None:
 
     gi_data = load_json(gi_data_path)
@@ -285,6 +286,9 @@ def replace_artifacts(gi_data_path: PathLike,
     gi_data["artifacts"] = all_artifacts["artifacts"]
 
     write_json(gi_data, updated_gi_data_path)
+
+    if verbose:
+        print(f"Created updated GI Database: {updated_gi_data_path}")
 
 def remove_duplicate_artifacts(artifacts: Dict[str, Dict[str, list]]) -> List[artifact.Artifact]:
     all_artifacts = []
