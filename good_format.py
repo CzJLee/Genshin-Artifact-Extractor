@@ -23,7 +23,9 @@ setKey = {
     "Vermillion Hereafter": "VermillionHereafter",
     "Retracing Bolide": "RetracingBolide",
     "Deepwood Memories": "DeepwoodMemories",
-    "Gilded Dreams": "GildedDreams"
+    "Gilded Dreams": "GildedDreams",
+    "Flower of Paradise Lost": "FlowerOfParadiseLost",
+    "Desert Pavilion Chronicle": "DesertPavilionChronicle"
 }
 
 slotKey = {
@@ -65,11 +67,14 @@ location = {
     "Beidou": "Beidou",
     "Bennett": "Bennett",
     "Chongyun": "Chongyun",
+    "Candace": "Candace",
     "Collei": "Collei",
+    "Cyno": "Cyno",
     "Diluc": "Diluc",
     "Diona": "Diona",
     "Dori": "Dori",
     "Eula": "Eula",
+    "Faruzan": "Faruzan",
     "Fischl": "Fischl",
     "Ganyu": "Ganyu",
     "Gorou": "Gorou",
@@ -85,6 +90,8 @@ location = {
     "Kuki Shinobu": "KukiShinobu",
     "Lisa": "Lisa",
     "Mona": "Mona",
+    "Nahida": "Nahida",
+    "Nilou": "Nilou",
     "Ningguang": "Ningguang",
     "Noelle": "Noelle",
     "Qiqi": "Qiqi",
@@ -101,6 +108,7 @@ location = {
     "Thoma": "Thoma",
     "Crazy": "Traveler",
     "Venti": "Venti",
+    "Wanderer": "Wanderer",
     "Xiangling": "Xiangling",
     "Xiao": "Xiao",
     "Xingqiu": "Xingqiu",
