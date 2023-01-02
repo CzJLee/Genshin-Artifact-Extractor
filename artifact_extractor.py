@@ -1,7 +1,7 @@
 import cv2
 import pathlib
 import numpy as np
-import json
+# import json
 import time
 import shutil
 import pytesseract
@@ -10,7 +10,7 @@ import tempfile
 import re
 import os
 from tqdm import tqdm
-from fastprogress import fastprogress
+# from fastprogress import fastprogress
 
 import artifact
 
@@ -346,7 +346,7 @@ if __name__ == "__main__":
     # Find most recently downloaded GI Database
     database_files = []
     for file in download_dir.iterdir():
-        if re.fullmatch("Database_\d+_([-_\d]+).json", file.name):
+        if re.fullmatch(r"Database_\d+_([-_\d]+).json", file.name):
             database_files.append(file)
     database_files.sort()
     if database_files:
@@ -356,8 +356,10 @@ if __name__ == "__main__":
 
     print(f"Using: {gi_data_path}")
     
+    # Run artifact extractor on artifacts.MOV located in download directory
     main(download_dir / "artifacts.MOV")
 
+    # Replace artifacts and write to updated_gi_data_path
     replace_artifacts(gi_data_path = gi_data_path, 
         all_artifacts_json="artifacts_good_format.json", 
         updated_gi_data_path="gi_data_updated.json")
