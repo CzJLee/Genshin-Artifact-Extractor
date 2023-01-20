@@ -6,7 +6,8 @@
 	],
 	"settings": {
 		"cSpell.words": [
-			"imwrite"
+			"imwrite",
+			"pytesseract"
 		],
 		"editor.insertSpaces": true
 	}

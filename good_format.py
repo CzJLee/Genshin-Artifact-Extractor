@@ -60,6 +60,7 @@ statKey = {
 
 location = {
     "Albedo": "Albedo",
+    "Alhaitham": "Alhaitham",
     "Aloy": "Aloy",
     "Amber": "Amber",
     "Arataki Itto": "AratakiItto",
@@ -70,6 +71,7 @@ location = {
     "Candace": "Candace",
     "Collei": "Collei",
     "Cyno": "Cyno",
+    "Dehya": "Dehya",
     "Diluc": "Diluc",
     "Diona": "Diona",
     "Dori": "Dori",
@@ -89,6 +91,7 @@ location = {
     "Kujou Sara": "KujouSara",
     "Kuki Shinobu": "KukiShinobu",
     "Lisa": "Lisa",
+    "Mika": "Mika",
     "Mona": "Mona",
     "Nahida": "Nahida",
     "Nilou": "Nilou",
@@ -114,6 +117,7 @@ location = {
     "Xingqiu": "Xingqiu",
     "Xinyan": "Xinyan",
     "Yanfei": "Yanfei",
+    "Yaoyao": "Yaoyao",
     "Yelan": "Yelan",
     "Yae Miko": "YaeMiko",
     "Yoimiya": "Yoimiya",
