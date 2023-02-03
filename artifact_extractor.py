@@ -304,7 +304,7 @@ def replace_artifacts(gi_data_path: PathLike,
 def remove_duplicate_artifacts(artifacts: dict[str, dict[str, list]]) -> list[artifact.Artifact]:
     all_artifacts = []
     previous_artifact = None
-    for _id, ocr_json in artifacts.items():
+    for _id, ocr_json in sorted(artifacts.items()):
         next_artifact = artifact.Artifact.from_ocr_json(ocr_json)
         if next_artifact != previous_artifact:
             all_artifacts.append(next_artifact)
@@ -317,7 +317,7 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
 
     # Create a directory to store intermediate results.
     # If program crashes, try to detect existing directory to continue where it crashed.
-    artifact_dir_name = "_artifact_temp"
+    artifact_dir_name = f"_artifact_temp"
     if artifact_dir is None:
         artifact_dir = pathlib.Path().cwd() / artifact_dir_name
     else:
@@ -371,7 +371,7 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
         all_artifacts_json="artifacts_good_format.json", 
         updated_gi_data_path="gi_data_updated.json")
 
-    shutil.rmtree(artifact_dir)
+    # shutil.rmtree(artifact_dir)
 
 def get_most_recent_gi_database(search_dir) -> Optional[PathLike]:
     # Find most recently downloaded GI Database
