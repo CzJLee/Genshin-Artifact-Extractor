@@ -1,7 +1,6 @@
 import cv2
 import pathlib
 import numpy as np
-# import json
 import time
 import shutil
 import pytesseract
@@ -10,7 +9,6 @@ import tempfile
 import re
 import os
 from tqdm import tqdm
-# from fastprogress import fastprogress
 
 import artifact
 
@@ -54,7 +52,8 @@ def video_to_frames(input_file_path: PathLike, output_dir: PathLike, verbose = T
         None
     """
     try:
-        pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+        output_dir = pathlib.Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
     except OSError:
         pass
 
@@ -119,6 +118,7 @@ def crop_roi(image: np.ndarray, roi: List[int]) -> np.ndarray:
 
 def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
     output_dir = pathlib.Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     hashes = set()
     valid_frames = []
     
@@ -147,6 +147,7 @@ def get_artifact_components(frames_dir: PathLike, output_dir: PathLike, verbose 
     # Crop all images
     frames_dir = pathlib.Path(frames_dir)
     output_dir = pathlib.Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     if verbose:
         print("Getting artifact component crops...")
     for img_path in tqdm(sorted(frames_dir.iterdir())):
@@ -250,17 +251,19 @@ def ocr_artifact(artifact_dir: PathLike) -> Dict[str, Union[str, list]]:
     artifact_text["substats_4"] = [x for x in artifact_text["substats_4"].split("\n") if x]
     return artifact_text
 
-def extract_text_dir(ocr_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
+def extract_text_dir(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
     print("Running OCR...")
-    ocr_dir = pathlib.Path(ocr_dir)
+    artifact_component_dir = pathlib.Path(artifact_component_dir)
+    ocr_output_dir = pathlib.Path(ocr_output_dir).mkdir(parents=True, exist_ok=True)
     artifacts = {}
-    for artifact_dir in tqdm(sorted(ocr_dir.iterdir())):
+    for artifact_dir in tqdm(sorted(artifact_component_dir.iterdir())):
         if artifact_dir.is_dir():
             artifact_text = ocr_artifact(artifact_dir)
             artifacts[artifact_dir.stem] = artifact_text
             # if verbose:
             #     print(artifact_text)
 
+    write_json(artifacts, ocr_output_dir / "artifacts.json")
     return artifacts
 
 # def write_json(artifacts, save_file_path = "artifacts.json"):
@@ -304,33 +307,51 @@ def remove_duplicate_artifacts(artifacts: Dict[str, Dict[str, list]]) -> List[ar
 def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, verbose = True) -> None:
     video_path = pathlib.Path(video_path)
 
+    # Create a directory to store intermediate results.
+    # If program crashes, try to detect existing directory to continue where it crashed.
+    artifact_dir_name = "_artifact_temp"
     if artifact_dir is None:
-        temp_dir = tempfile.TemporaryDirectory()
-        artifact_dir = pathlib.Path(temp_dir.name)
-        if verbose:
-            print(f"Created temporary directory at {artifact_dir}")
+        artifact_dir = pathlib.Path().cwd() / artifact_dir_name
     else:
-        artifact_dir = pathlib.Path(artifact_dir)
-        artifact_dir.mkdir(exist_ok=True, parents=True)
+        artifact_dir = pathlib.Path(artifact_dir) / artifact_dir_name
+    artifact_dir.mkdir(exist_ok=True, parents=True)
+
+    # if artifact_dir is None:
+    #     temp_dir = tempfile.TemporaryDirectory()
+    #     artifact_dir = pathlib.Path(temp_dir.name)
+    #     if verbose:
+    #         print(f"Created temporary directory at {artifact_dir}")
+    # else:
+    #     artifact_dir = pathlib.Path(artifact_dir)
+    #     artifact_dir.mkdir(exist_ok=True, parents=True)
+
+    video_output_dir_name = "video_output"
+    valid_frames_dir_name = "valid_frames"
+    artifact_components_dir_name = "artifact_components"
+    ocr_output_dir_name = "ocr_output"
 
 
     # Extract frames from video
-    video_output_dir = artifact_dir / "video_output"
-    video_output_dir.mkdir(exist_ok=True, parents=True)
-    video_to_frames(video_path, video_output_dir)
+    if not valid_frames_dir_name.exists():
+        # The next step directory will exist if this step has been completed.
+        video_output_dir = artifact_dir / video_output_dir_name
+        video_to_frames(video_path, video_output_dir)
 
     # Remove duplicate frames using image hashes
-    valid_frames_dir = artifact_dir / "valid_frames"
-    valid_frames_dir.mkdir(exist_ok=True, parents=True)
-    remove_duplicate_frames(video_output_dir, valid_frames_dir)
+    if not artifact_components_dir_name.exists():
+        # The next step directory will exist if this step has been completed.
+        valid_frames_dir = artifact_dir / valid_frames_dir_name
+        remove_duplicate_frames(video_output_dir, valid_frames_dir)
 
     # Get artifact component crops
-    ocr_dir = artifact_dir / "artifacts"
-    ocr_dir.mkdir(exist_ok=True, parents=True)
-    get_artifact_components(valid_frames_dir, ocr_dir)
+    if not ocr_output_dir.exists():
+        # The next step directory will exist if this step has been completed.
+        artifact_components_dir = artifact_dir / artifact_components_dir_name
+        get_artifact_components(valid_frames_dir, artifact_components_dir)
 
     # Run OCR
-    artifacts = extract_text_dir(ocr_dir)
+    ocr_output_dir = artifact_dir / ocr_output_dir_name
+    artifacts = extract_text_dir(artifact_components_dir, ocr_output_dir)
 
     # Remove duplicate artifacts
     all_artifacts = remove_duplicate_artifacts(artifacts=artifacts)
@@ -339,28 +360,28 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
     # Save artifacts to good format
     artifact.artifact_list_to_good_format_json(all_artifacts, output_path="artifacts_good_format.json")
 
-if __name__ == "__main__":
-    download_dir = pathlib.Path("~/Downloads").expanduser()
-
-
     # Find most recently downloaded GI Database
-    database_files = []
-    for file in download_dir.iterdir():
-        if re.fullmatch(r"Database_\d+_([-_\d]+).json", file.name):
-            database_files.append(file)
-    database_files.sort()
-    if database_files:
-        gi_data_path = database_files[-1]
-    else:
-        print("No Database Found.")
-
-    print(f"Using: {gi_data_path}")
-    
-    # Run artifact extractor on artifacts.MOV located in download directory
-    main(download_dir / "artifacts.MOV")
-
+    gi_data_path = get_most_recent_gi_database(download_dir)
     # Replace artifacts and write to updated_gi_data_path
     replace_artifacts(gi_data_path = gi_data_path, 
         all_artifacts_json="artifacts_good_format.json", 
         updated_gi_data_path="gi_data_updated.json")
+
+def get_most_recent_gi_database(search_dir) -> Optional[PathLike]:
+    # Find most recently downloaded GI Database
+    database_files = []
+    for file in search_dir.iterdir():
+        if re.fullmatch(r"Database_\d+_([-_\d]+).json", file.name):
+            database_files.append(file)
+    database_files.sort()
+    if database_files:
+        return database_files[-1]
+
+
+
+if __name__ == "__main__":
+    download_dir = pathlib.Path("~/Downloads").expanduser()
+
+    # Run artifact extractor on artifacts.MOV located in download directory
+    main(download_dir / "artifacts.MOV")
  
