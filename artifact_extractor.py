@@ -74,17 +74,6 @@ def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbo
 
     with tqdm(total = video_length) as pbar:
         while success:
-            # Extract the frame
-            # ret, frame = cap.read()
-            # if not ret:
-            #     # Continue if bad frame
-            #     count = count + 1
-
-            #     continue
-            # Write the results back to output location.
-            # if verbose:
-            #     # print(output_dir / f"{(count+1):0>4d}.jpg")
-            #     print(f"Reading frame {(count+1):0>4d} / {video_length}")
             frame = crop_roi(frame, ROI)
             cv2.imwrite(str(output_dir / f"{(count+1):0>4d}.jpg"), frame)
             count = count + 1
@@ -105,17 +94,6 @@ def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbo
 
 def crop_roi(image: np.ndarray, roi: List[int]) -> np.ndarray:
     return image[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
-
-# def crop_frames(frames_dir, output_dir):
-#     # Crop all images
-#     frames_dir = pathlib.Path(frames_dir)
-#     output_dir = pathlib.Path(output_dir)
-#     for img_path in sorted(frames_dir.iterdir()):
-#         if img_path.suffix == ".jpg":
-#             print(img_path.name)
-#             image = cv2.imread(str(img_path))
-#             cropped_img = crop_roi(image, roi)
-#             cv2.imwrite(str(output_dir / img_path.name), cropped_img)
 
 def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
     """
@@ -302,14 +280,6 @@ def run_ocr_on_artifact_components_multiprocess(artifact_component_dir: PathLike
     write_json(artifacts, ocr_output_dir / "artifacts.json")
     return artifacts
 
-# def write_json(artifacts, save_file_path = "artifacts.json"):
-#     save_file_path = pathlib.Path(save_file_path)
-#     with open(save_file_path, "w") as f:
-#        json.dump(artifacts, f, indent=4)
-
-# def load_json(save_file_path = "artifacts.json"):
-#     with open(save_file_path) as f:
-#         return json.loads(f.read())
 
 def replace_artifacts(gi_data_path: PathLike, 
                       all_artifacts_json = "artifacts_good_format.json", 
@@ -318,7 +288,6 @@ def replace_artifacts(gi_data_path: PathLike,
     ) -> None:
 
     gi_data = load_json(gi_data_path)
-
     all_artifacts = load_json(all_artifacts_json)
 
     # Replace data
