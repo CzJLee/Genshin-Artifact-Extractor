@@ -105,10 +105,10 @@ _valid_character_names = {
     "Candace", "Chongyun", "Collei", "Cyno", "Diluc", "Diona", "Eula",
     "Faruzan", "Fischl", "Ganyu", "Gorou", "Hu Tao", "Jean",
     "Kaedehara Kazuha", "Kaeya", "Kamisato Ayaka", "Kamisato Ayato", "Keqing",
-    "Klee", "Kujou Sara", "Kuki Shinobu", "Lisa", "Mona", "Nahida", "Nilou",
-    "Ningguang", "Noelle", "Qiqi", "Raiden Shogun", "Razor", "Rosaria",
-    "Sangonomiya Kokomi", "Sayu", "Shikanoin Heizou", "Shenhe", "Sucrose",
-    "Tartaglia", "Thoma", "Tighnari", "Crazy", "Venti", "Wanderer",
+    "Klee", "Kujou Sara", "Kuki Shinobu", "Layla", "Lisa", "Mona", "Nahida",
+    "Nilou", "Ningguang", "Noelle", "Qiqi", "Raiden Shogun", "Razor",
+    "Rosaria", "Sangonomiya Kokomi", "Sayu", "Shikanoin Heizou", "Shenhe",
+    "Sucrose", "Tartaglia", "Thoma", "Tighnari", "Crazy", "Venti", "Wanderer",
     "Xiangling", "Xiao", "Xingqiu", "Xinyan", "Yanfei", "Yelan", "Yae Miko",
     "Yoimiya", "Yun Jin", "Zhongli"
 }

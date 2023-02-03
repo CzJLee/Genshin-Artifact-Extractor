@@ -90,6 +90,7 @@ location = {
     "Klee": "Klee",
     "Kujou Sara": "KujouSara",
     "Kuki Shinobu": "KukiShinobu",
+    "Layla": "Layla",
     "Lisa": "Lisa",
     "Mika": "Mika",
     "Mona": "Mona",

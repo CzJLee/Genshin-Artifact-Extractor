@@ -9,6 +9,7 @@ import tempfile
 import re
 import os
 from tqdm import tqdm
+import concurrent.futures
 
 import artifact
 
@@ -18,10 +19,10 @@ PathLike = Union[str, os.PathLike]
 from utils import write_json, load_json
 
 # MAGIC NUMBERS
-roi = (1217, 153, 612, 1135)
+ROI = (1217, 153, 612, 1135)
 
 # Crop Region of Interest for iPad
-rois = {
+ROIS = {
     "artifact_type" :   (  28,   77,  320,   46),
     "main_stat" :       (  26,  183,  300,   37),
     "value" :           (  26,  219,  208,   62),
@@ -35,18 +36,18 @@ rois = {
 }
 
 # Constants
-light_text = ["artifact_type", "level", "main_stat", "value"]
-dark_text = ["equipped", "set_name_3", "set_name_4", "substats_3", "substats_4"]
+LIGHT_TEXT = ["artifact_type", "level", "main_stat", "value"]
+DARK_TEXT = ["equipped", "set_name_3", "set_name_4", "substats_3", "substats_4"]
 
-whitelist = set(string.ascii_letters + string.digits + string.whitespace + ".,+-%\':")
+WHITELIST = set(string.ascii_letters + string.digits + string.whitespace + ".,+-%\':")
 
 
 
-def video_to_frames(input_file_path: PathLike, output_dir: PathLike, verbose = True) -> None:
+def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbose = True) -> None:
     """Function to extract frames from input video file
     and save them as separate frames in an output directory.
     Args:
-        input_file_path: Input video file.
+        input_video_path: Input video file.
         output_dir: Output directory to save the frames.
     Returns:
         None
@@ -60,7 +61,7 @@ def video_to_frames(input_file_path: PathLike, output_dir: PathLike, verbose = T
     # Log the time
     time_start = time.time()
     # Start capturing the feed
-    cap = cv2.VideoCapture(str(input_file_path))
+    cap = cv2.VideoCapture(str(input_video_path))
     # Find the number of frames
     video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
     if verbose:
@@ -84,7 +85,7 @@ def video_to_frames(input_file_path: PathLike, output_dir: PathLike, verbose = T
             # if verbose:
             #     # print(output_dir / f"{(count+1):0>4d}.jpg")
             #     print(f"Reading frame {(count+1):0>4d} / {video_length}")
-            frame = crop_roi(frame, roi)
+            frame = crop_roi(frame, ROI)
             cv2.imwrite(str(output_dir / f"{(count+1):0>4d}.jpg"), frame)
             count = count + 1
             pbar.update()
@@ -117,9 +118,16 @@ def crop_roi(image: np.ndarray, roi: List[int]) -> np.ndarray:
 #             cv2.imwrite(str(output_dir / img_path.name), cropped_img)
 
 def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
+    """
+    Use image pHashes to remove duplicate frames.
+
+    Args:
+        cropped_frames_dir (PathLike): _description_
+        output_dir (PathLike): _description_
+        verbose (bool, optional): _description_. Defaults to True.
+    """
     output_dir = pathlib.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    hashes = set()
     valid_frames = []
     
     previous_hash = None
@@ -135,7 +143,6 @@ def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, 
             # Eliminate frames if the current img hash is equal to the previous hash.
             if img_hash != previous_hash:
                 valid_frames.append(img_path)
-                # print(f"{img_path.name} : {img_hash}")
                 previous_hash = img_hash
 
     print(f"Found {len(valid_frames)} artifacts")
@@ -152,11 +159,10 @@ def get_artifact_components(frames_dir: PathLike, output_dir: PathLike, verbose 
         print("Getting artifact component crops...")
     for img_path in tqdm(sorted(frames_dir.iterdir())):
         if img_path.suffix == ".jpg":
-            # print(img_path.name)
             image = cv2.imread(str(img_path))
             img_crop_dir = output_dir / img_path.stem
             img_crop_dir.mkdir(exist_ok=True, parents=True)
-            for key, roi in rois.items():
+            for key, roi in ROIS.items():
                 cropped_img = crop_roi(image, roi)
                 cv2.imwrite(str(img_crop_dir / f"{key}.jpg"), cropped_img)
 
@@ -227,18 +233,19 @@ def _get_ocr_text(image: np.ndarray) -> str:
     config="--psm 6"
     ocr_text = pytesseract.image_to_string(image, lang = "genshin", config=config)
     ocr_text = ocr_text.strip()
-    ocr_text = "".join(char for char in ocr_text if char in whitelist)
+    ocr_text = "".join(char for char in ocr_text if char in WHITELIST)
     return ocr_text
 
 def ocr_artifact(artifact_dir: PathLike) -> Dict[str, Union[str, list]]:
     artifact_dir = pathlib.Path(artifact_dir)
     artifact_text = {}
-    for artifact_component in light_text:
+    artifact_text["artifact_id"] = artifact_dir.stem
+    for artifact_component in LIGHT_TEXT:
         processed_image = _process_light_text(artifact_dir / (artifact_component + ".jpg"))
         ocr_text = _get_ocr_text(processed_image)
         artifact_text[artifact_component] = ocr_text
 
-    for artifact_component in dark_text:
+    for artifact_component in DARK_TEXT:
         processed_image = _process_dark_text(artifact_dir / (artifact_component + ".jpg"))
         ocr_text = _get_ocr_text(processed_image)
         artifact_text[artifact_component] = ocr_text
@@ -251,17 +258,46 @@ def ocr_artifact(artifact_dir: PathLike) -> Dict[str, Union[str, list]]:
     artifact_text["substats_4"] = [x for x in artifact_text["substats_4"].split("\n") if x]
     return artifact_text
 
-def extract_text_dir(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
-    print("Running OCR...")
+def run_ocr_on_artifact_components(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
+    if verbose:
+        print("Running OCR...")
+
     artifact_component_dir = pathlib.Path(artifact_component_dir)
-    ocr_output_dir = pathlib.Path(ocr_output_dir).mkdir(parents=True, exist_ok=True)
+    artifact_component_dirs = sorted(artifact_component_dir.iterdir())
+    ocr_output_dir = pathlib.Path(ocr_output_dir)
+    ocr_output_dir.mkdir(parents=True, exist_ok=True)
+
     artifacts = {}
-    for artifact_dir in tqdm(sorted(artifact_component_dir.iterdir())):
+    for artifact_dir in tqdm(artifact_component_dirs):
         if artifact_dir.is_dir():
             artifact_text = ocr_artifact(artifact_dir)
             artifacts[artifact_dir.stem] = artifact_text
-            # if verbose:
-            #     print(artifact_text)
+
+    write_json(artifacts, ocr_output_dir / "artifacts.json")
+    return artifacts
+
+def run_ocr_on_artifact_components_multiprocess(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
+    if verbose:
+        print("Running OCR...")
+
+    artifact_component_dir = pathlib.Path(artifact_component_dir)
+    artifact_component_dirs = sorted(artifact_component_dir.iterdir())
+    ocr_output_dir = pathlib.Path(ocr_output_dir)
+    ocr_output_dir.mkdir(parents=True, exist_ok=True)
+
+    artifacts = {}
+    artifact_dirs = [dir for dir in artifact_component_dirs if dir.is_dir()]
+    progress_bar = tqdm(total = len(artifact_dirs))
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = []
+        for artifact_dir in artifact_dirs:
+            future = executor.submit(ocr_artifact, artifact_dir)
+            # Add callback up update tqdm progress bar.
+            future.add_done_callback(lambda _: progress_bar.update())
+            futures.append(future)
+        for future in concurrent.futures.as_completed(futures):
+            artifact_text = future.result()
+            artifacts[artifact_text["artifact_id"]] = artifact_text
 
     write_json(artifacts, ocr_output_dir / "artifacts.json")
     return artifacts
@@ -296,11 +332,11 @@ def replace_artifacts(gi_data_path: PathLike,
 def remove_duplicate_artifacts(artifacts: Dict[str, Dict[str, list]]) -> List[artifact.Artifact]:
     all_artifacts = []
     previous_artifact = None
-    for id, ocr_json in artifacts.items():
-        sample_artifact = artifact.Artifact.from_ocr_json(ocr_json)
-        if sample_artifact != previous_artifact:
-            all_artifacts.append(sample_artifact)
-            previous_artifact = sample_artifact
+    for _id, ocr_json in artifacts.items():
+        next_artifact = artifact.Artifact.from_ocr_json(ocr_json)
+        if next_artifact != previous_artifact:
+            all_artifacts.append(next_artifact)
+            previous_artifact = next_artifact
 
     return all_artifacts
 
@@ -316,44 +352,40 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
         artifact_dir = pathlib.Path(artifact_dir) / artifact_dir_name
     artifact_dir.mkdir(exist_ok=True, parents=True)
 
-    # if artifact_dir is None:
-    #     temp_dir = tempfile.TemporaryDirectory()
-    #     artifact_dir = pathlib.Path(temp_dir.name)
-    #     if verbose:
-    #         print(f"Created temporary directory at {artifact_dir}")
-    # else:
-    #     artifact_dir = pathlib.Path(artifact_dir)
-    #     artifact_dir.mkdir(exist_ok=True, parents=True)
-
     video_output_dir_name = "video_output"
+    video_output_dir = artifact_dir / video_output_dir_name
+
     valid_frames_dir_name = "valid_frames"
+    valid_frames_dir = artifact_dir / valid_frames_dir_name
+
     artifact_components_dir_name = "artifact_components"
+    artifact_components_dir = artifact_dir / artifact_components_dir_name
+
     ocr_output_dir_name = "ocr_output"
+    ocr_output_dir = artifact_dir / ocr_output_dir_name
 
 
-    # Extract frames from video
-    if not valid_frames_dir_name.exists():
+    # Extract each video frame and crop the Artifact region.
+    if not valid_frames_dir.exists():
         # The next step directory will exist if this step has been completed.
-        video_output_dir = artifact_dir / video_output_dir_name
-        video_to_frames(video_path, video_output_dir)
+        extract_video_frames(video_path, video_output_dir)
 
-    # Remove duplicate frames using image hashes
-    if not artifact_components_dir_name.exists():
+    # Remove duplicate frames using image hashes.
+    if not artifact_components_dir.exists():
         # The next step directory will exist if this step has been completed.
-        valid_frames_dir = artifact_dir / valid_frames_dir_name
         remove_duplicate_frames(video_output_dir, valid_frames_dir)
 
     # Get artifact component crops
     if not ocr_output_dir.exists():
         # The next step directory will exist if this step has been completed.
-        artifact_components_dir = artifact_dir / artifact_components_dir_name
         get_artifact_components(valid_frames_dir, artifact_components_dir)
 
     # Run OCR
-    ocr_output_dir = artifact_dir / ocr_output_dir_name
-    artifacts = extract_text_dir(artifact_components_dir, ocr_output_dir)
+    if not (ocr_output_dir / "artifacts.json").exists():
+        artifacts = run_ocr_on_artifact_components_multiprocess(artifact_components_dir, ocr_output_dir)
 
     # Remove duplicate artifacts
+    artifacts = load_json(ocr_output_dir / "artifacts.json")
     all_artifacts = remove_duplicate_artifacts(artifacts=artifacts)
     print(f"Found {len(all_artifacts)} total artifacts")
 
@@ -366,6 +398,8 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
     replace_artifacts(gi_data_path = gi_data_path, 
         all_artifacts_json="artifacts_good_format.json", 
         updated_gi_data_path="gi_data_updated.json")
+
+    shutil.rmtree(artifact_dir)
 
 def get_most_recent_gi_database(search_dir) -> Optional[PathLike]:
     # Find most recently downloaded GI Database
