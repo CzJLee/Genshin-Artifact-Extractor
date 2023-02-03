@@ -11,12 +11,14 @@ import os
 from tqdm import tqdm
 import concurrent.futures
 
+import utils
 import artifact
 
 from typing import Dict, List, Union, Any, Optional
 PathLike = Union[str, os.PathLike]
 
-from utils import write_json, load_json
+write_json = utils.write_json
+load_json = utils.load_json
 
 # MAGIC NUMBERS
 ROI = (1217, 153, 612, 1135)
@@ -92,7 +94,7 @@ def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbo
         print ("It took %d seconds for conversion." % (time_end-time_start))
     # break
 
-def crop_roi(image: np.ndarray, roi: List[int]) -> np.ndarray:
+def crop_roi(image: np.ndarray, roi: list[int]) -> np.ndarray:
     return image[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
 
 def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
@@ -133,6 +135,7 @@ def get_artifact_components(frames_dir: PathLike, output_dir: PathLike, verbose 
     frames_dir = pathlib.Path(frames_dir)
     output_dir = pathlib.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
     if verbose:
         print("Getting artifact component crops...")
     for img_path in tqdm(sorted(frames_dir.iterdir())):
@@ -214,7 +217,7 @@ def _get_ocr_text(image: np.ndarray) -> str:
     ocr_text = "".join(char for char in ocr_text if char in WHITELIST)
     return ocr_text
 
-def ocr_artifact(artifact_dir: PathLike) -> Dict[str, Union[str, list]]:
+def ocr_artifact(artifact_dir: PathLike) -> dict[str, Union[str, list]]:
     artifact_dir = pathlib.Path(artifact_dir)
     artifact_text = {}
     artifact_text["artifact_id"] = artifact_dir.stem
@@ -236,7 +239,7 @@ def ocr_artifact(artifact_dir: PathLike) -> Dict[str, Union[str, list]]:
     artifact_text["substats_4"] = [x for x in artifact_text["substats_4"].split("\n") if x]
     return artifact_text
 
-def run_ocr_on_artifact_components(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
+def run_ocr_on_artifact_components(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> dict[str, dict[str, list]]:
     if verbose:
         print("Running OCR...")
 
@@ -254,7 +257,7 @@ def run_ocr_on_artifact_components(artifact_component_dir: PathLike, ocr_output_
     write_json(artifacts, ocr_output_dir / "artifacts.json")
     return artifacts
 
-def run_ocr_on_artifact_components_multiprocess(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> Dict[str, Dict[str, list]]:
+def run_ocr_on_artifact_components_multiprocess(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> dict[str, dict[str, list]]:
     if verbose:
         print("Running OCR...")
 
@@ -298,7 +301,7 @@ def replace_artifacts(gi_data_path: PathLike,
     if verbose:
         print(f"Created updated GI Database: {updated_gi_data_path}")
 
-def remove_duplicate_artifacts(artifacts: Dict[str, Dict[str, list]]) -> List[artifact.Artifact]:
+def remove_duplicate_artifacts(artifacts: dict[str, dict[str, list]]) -> list[artifact.Artifact]:
     all_artifacts = []
     previous_artifact = None
     for _id, ocr_json in artifacts.items():
