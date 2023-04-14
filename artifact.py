@@ -87,7 +87,8 @@ _valid_set_name = {
     "Pale Flame", "Emblem of Severed Fate", "Shimenawa's Reminiscence",
     "Husk of Opulent Dreams", "Ocean-Hued Clam", "Echoes of an Offering",
     "Vermillion Hereafter", "Retracing Bolide", "Deepwood Memories",
-    "Gilded Dreams", "Flower of Paradise Lost", "Desert Pavilion Chronicle"
+    "Gilded Dreams", "Flower of Paradise Lost", "Desert Pavilion Chronicle",
+    "Nymph's Dream", "Vourukasha's Glow"
 }
 
 # Valid substats
@@ -101,16 +102,16 @@ _valid_substats = {
 
 # Valid character names
 _valid_character_names = {
-    "Albedo", "Aloy", "Amber", "Arataki Itto", "Barbara", "Beidou", "Bennett",
-    "Candace", "Chongyun", "Collei", "Cyno", "Diluc", "Diona", "Eula",
-    "Faruzan", "Fischl", "Ganyu", "Gorou", "Hu Tao", "Jean",
-    "Kaedehara Kazuha", "Kaeya", "Kamisato Ayaka", "Kamisato Ayato", "Keqing",
-    "Klee", "Kujou Sara", "Kuki Shinobu", "Layla", "Lisa", "Mona", "Nahida",
-    "Nilou", "Ningguang", "Noelle", "Qiqi", "Raiden Shogun", "Razor",
-    "Rosaria", "Sangonomiya Kokomi", "Sayu", "Shikanoin Heizou", "Shenhe",
-    "Sucrose", "Tartaglia", "Thoma", "Tighnari", "Crazy", "Venti", "Wanderer",
-    "Xiangling", "Xiao", "Xingqiu", "Xinyan", "Yanfei", "Yelan", "Yae Miko",
-    "Yoimiya", "Yun Jin", "Zhongli"
+    "Albedo", "Aloy", "Amber", "Arataki Itto", "Baizhu", "Barbara", "Beidou",
+    "Bennett", "Candace", "Chongyun", "Collei", "Cyno", "Diluc", "Diona",
+    "Eula", "Faruzan", "Fischl", "Ganyu", "Gorou", "Hu Tao", "Jean",
+    "Kaedehara Kazuha", "Kaeya", "Kamisato Ayaka", "Kamisato Ayato", "Kaveh",
+    "Keqing", "Kirara", "Klee", "Kujou Sara", "Kuki Shinobu", "Layla", "Lisa",
+    "Mona", "Nahida", "Nilou", "Ningguang", "Noelle", "Qiqi", "Raiden Shogun",
+    "Razor", "Rosaria", "Sangonomiya Kokomi", "Sayu", "Shikanoin Heizou",
+    "Shenhe", "Sucrose", "Tartaglia", "Thoma", "Tighnari", "Crazy", "Venti",
+    "Wanderer", "Xiangling", "Xiao", "Xingqiu", "Xinyan", "Yanfei", "Yelan",
+    "Yae Miko", "Yoimiya", "Yun Jin", "Zhongli"
 }
 # for character in artifact_info["Characters"]:
 #     character_name = list(character["name"].keys())[0]

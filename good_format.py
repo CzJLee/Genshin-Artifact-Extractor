@@ -25,7 +25,9 @@ setKey = {
     "Deepwood Memories": "DeepwoodMemories",
     "Gilded Dreams": "GildedDreams",
     "Flower of Paradise Lost": "FlowerOfParadiseLost",
-    "Desert Pavilion Chronicle": "DesertPavilionChronicle"
+    "Desert Pavilion Chronicle": "DesertPavilionChronicle",
+    "Nymph's Dream": "NymphsDream",
+    "Vourukasha's Glow": "VourukashasGlow"
 }
 
 slotKey = {
@@ -64,6 +66,7 @@ location = {
     "Aloy": "Aloy",
     "Amber": "Amber",
     "Arataki Itto": "AratakiItto",
+    "Baizhu": "Baizhu",
     "Barbara": "Barbara",
     "Beidou": "Beidou",
     "Bennett": "Bennett",
@@ -86,7 +89,9 @@ location = {
     "Kaeya": "Kaeya",
     "Kamisato Ayaka": "KamisatoAyaka",
     "Kamisato Ayato": "KamisatoAyato",
+    "Kaveh": "Kaveh",
     "Keqing": "Keqing",
+    "Kirara": "Kirara",
     "Klee": "Klee",
     "Kujou Sara": "KujouSara",
     "Kuki Shinobu": "KukiShinobu",
