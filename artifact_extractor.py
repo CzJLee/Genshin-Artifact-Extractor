@@ -99,9 +99,15 @@ def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbo
 def crop_roi(image: np.ndarray, roi: list[int]) -> np.ndarray:
     return image[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
 
+def _get_img_hash(img_path: PathLike, img_hash_algorithm = cv2.img_hash.blockMeanHash) -> tuple:
+    image = cv2.imread(str(img_path))
+    img_hash = img_hash_algorithm(image)
+    img_hash = tuple(img_hash[0])
+    return img_hash
+
 def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
     """
-    Use image pHashes to remove duplicate frames.
+    Use image hashes to remove duplicate frames.
 
     Args:
         cropped_frames_dir (PathLike): _description_
@@ -118,9 +124,7 @@ def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, 
         print("Removing duplicate frames...")
     for img_path in tqdm(sorted(cropped_frames_dir.iterdir())):
         if img_path.suffix == ".jpg":
-            image = cv2.imread(str(img_path))
-            img_hash = cv2.img_hash.pHash(image)
-            img_hash = tuple(img_hash[0])
+            img_hash = _get_img_hash(img_path)
 
             # Eliminate frames if the current img hash is equal to the previous hash.
             if img_hash != previous_hash:
