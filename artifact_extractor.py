@@ -99,8 +99,10 @@ def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbo
 def crop_roi(image: np.ndarray, roi: list[int]) -> np.ndarray:
     return image[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
 
-def _get_img_hash(img_path: PathLike, img_hash_algorithm = cv2.img_hash.blockMeanHash) -> tuple:
+def _get_img_hash(img_path: PathLike, img_hash_algorithm = cv2.img_hash.pHash) -> tuple:
     image = cv2.imread(str(img_path))
+    # Try cropping the image block to focus on the text difference.
+    image = image[70:670, :]
     img_hash = img_hash_algorithm(image)
     img_hash = tuple(img_hash[0])
     return img_hash
