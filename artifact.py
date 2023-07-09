@@ -103,7 +103,7 @@ _valid_substats = {
 # Valid character names
 _valid_character_names = {
     "Albedo", "Aloy", "Amber", "Arataki Itto", "Baizhu", "Barbara", "Beidou",
-    "Bennett", "Candace", "Chongyun", "Collei", "Cyno", "Diluc", "Diona",
+    "Bennett", "Candace", "Charlotte", "Chongyun", "Collei", "Cyno", "Diluc", "Diona",
     "Eula", "Faruzan", "Fischl", "Ganyu", "Gorou", "Hu Tao", "Jean",
     "Kaedehara Kazuha", "Kaeya", "Kamisato Ayaka", "Kamisato Ayato", "Kaveh",
     "Keqing", "Kirara", "Klee", "Kujou Sara", "Kuki Shinobu", "Layla", "Lisa",

@@ -10,6 +10,7 @@ import re
 import os
 from tqdm import tqdm
 import concurrent.futures
+import shutil
 
 import utils
 import artifact
@@ -43,7 +44,8 @@ DARK_TEXT = ["equipped", "set_name_3", "set_name_4", "substats_3", "substats_4"]
 
 WHITELIST = set(string.ascii_letters + string.digits + string.whitespace + ".,+-%\':")
 
-
+def copy_tesseract_font(source: PathLike = "genshin.traineddata", destination: PathLike = "/opt/homebrew/share/tessdata/genshin.traineddata") -> None:
+    shutil.copy(source, destination)
 
 def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbose = True) -> None:
     """Function to extract frames from input video file
@@ -386,6 +388,7 @@ def get_most_recent_gi_database(search_dir) -> Optional[PathLike]:
 
 
 if __name__ == "__main__":
+    copy_tesseract_font()
     download_dir = pathlib.Path("~/Downloads").expanduser()
 
     # Run artifact extractor on artifacts.MOV located in download directory

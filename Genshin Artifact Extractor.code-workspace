@@ -8,7 +8,8 @@
 		"cSpell.words": [
 			"imwrite",
 			"pytesseract",
-			"ROIS"
+			"ROIS",
+			"tesseract"
 		],
 		"editor.insertSpaces": true
 	}

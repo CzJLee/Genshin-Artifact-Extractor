@@ -70,6 +70,7 @@ location = {
     "Barbara": "Barbara",
     "Beidou": "Beidou",
     "Bennett": "Bennett",
+    "Charlotte": "Charlotte",
     "Chongyun": "Chongyun",
     "Candace": "Candace",
     "Collei": "Collei",
