@@ -88,7 +88,7 @@ _valid_set_name = {
     "Husk of Opulent Dreams", "Ocean-Hued Clam", "Echoes of an Offering",
     "Vermillion Hereafter", "Retracing Bolide", "Deepwood Memories",
     "Gilded Dreams", "Flower of Paradise Lost", "Desert Pavilion Chronicle",
-    "Nymph's Dream", "Vourukasha's Glow"
+    "Nymph's Dream", "Vourukasha's Glow", "Marechaussee Hunter", "Golden Troupe",
 }
 
 # Valid substats

@@ -66,6 +66,7 @@ statKey = {
 }
 
 location = {
+    "Crazy": "Traveler",
     "Albedo": "Albedo",
     "Alhaitham": "Alhaitham",
     "Aloy": "Aloy",
@@ -128,7 +129,6 @@ location = {
     "Tartaglia": "Tartaglia",
     "Tighnari": "Tighnari",
     "Thoma": "Thoma",
-    "Autumnstar": "Traveler",
     "Venti": "Venti",
     "Wanderer": "Wanderer",
     "Wriothesley": "Wriothesley",
