@@ -1,3 +1,7 @@
+"""Contains dictionaries mapping in game text strings to the GOOD format.
+
+Edit this file when new characters and artifacts are added."""
+
 setKey = {
     "Gladiator's Finale": "GladiatorsFinale",
     "Wanderer's Troupe": "WanderersTroupe",
@@ -10,7 +14,6 @@ setKey = {
     "Noblesse Oblige": "NoblesseOblige",
     "Bloodstained Chivalry": "BloodstainedChivalry",
     "Archaic Petra": "ArchaicPetra",
-    "Retracing Bolide": "RetracingBolide",
     "Blizzard Strayer": "BlizzardStrayer",
     "Heart of Depth": "HeartOfDepth",
     "Tenacity of the Millelith": "TenacityOfTheMillelith",
@@ -27,7 +30,9 @@ setKey = {
     "Flower of Paradise Lost": "FlowerOfParadiseLost",
     "Desert Pavilion Chronicle": "DesertPavilionChronicle",
     "Nymph's Dream": "NymphsDream",
-    "Vourukasha's Glow": "VourukashasGlow"
+    "Vourukasha's Glow": "VourukashasGlow",
+    "Golden Troupe": "GoldenTroupe",
+    "Marechaussee Hunter": "MarechausseeHunter",
 }
 
 slotKey = {
@@ -35,7 +40,7 @@ slotKey = {
     "Plume of Death": "plume",
     "Sands of Eon": "sands",
     "Goblet of Eonothem": "goblet",
-    "Circlet of Logos": "circlet"
+    "Circlet of Logos": "circlet",
 }
 
 statKey = {
@@ -57,7 +62,7 @@ statKey = {
     "Energy Recharge%": "enerRech_",
     "CRIT Rate%": "critRate_",
     "CRIT DMG%": "critDMG_",
-    "Healing Bonus%": "heal_"
+    "Healing Bonus%": "heal_",
 }
 
 location = {
@@ -70,9 +75,10 @@ location = {
     "Barbara": "Barbara",
     "Beidou": "Beidou",
     "Bennett": "Bennett",
+    "Candace": "Candace",
     "Charlotte": "Charlotte",
     "Chongyun": "Chongyun",
-    "Candace": "Candace",
+    "Clorinde": "Clorinde",
     "Collei": "Collei",
     "Cyno": "Cyno",
     "Dehya": "Dehya",
@@ -82,6 +88,8 @@ location = {
     "Eula": "Eula",
     "Faruzan": "Faruzan",
     "Fischl": "Fischl",
+    "Freminet": "Freminet",
+    "Furina": "Furina",
     "Ganyu": "Ganyu",
     "Gorou": "Gorou",
     "Hu Tao": "HuTao",
@@ -98,9 +106,13 @@ location = {
     "Kuki Shinobu": "KukiShinobu",
     "Layla": "Layla",
     "Lisa": "Lisa",
+    "Lyney": "Lyney",
+    "Lynette": "Lynette",
     "Mika": "Mika",
     "Mona": "Mona",
     "Nahida": "Nahida",
+    "Navia": "Navia",
+    "Neuvillette": "Neuvillette",
     "Nilou": "Nilou",
     "Ningguang": "Ningguang",
     "Noelle": "Noelle",
@@ -116,9 +128,10 @@ location = {
     "Tartaglia": "Tartaglia",
     "Tighnari": "Tighnari",
     "Thoma": "Thoma",
-    "Crazy": "Traveler",
+    "Autumnstar": "Traveler",
     "Venti": "Venti",
     "Wanderer": "Wanderer",
+    "Wriothesley": "Wriothesley",
     "Xiangling": "Xiangling",
     "Xiao": "Xiao",
     "Xingqiu": "Xingqiu",
@@ -129,5 +142,5 @@ location = {
     "Yae Miko": "YaeMiko",
     "Yoimiya": "Yoimiya",
     "Yun Jin": "YunJin",
-    "Zhongli": "Zhongli"
+    "Zhongli": "Zhongli",
 }

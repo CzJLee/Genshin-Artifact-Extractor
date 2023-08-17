@@ -101,15 +101,16 @@ _valid_substats = {
 #     _valid_substats.append(substat_name)
 
 # Valid character names
+# Not currently used. 
 _valid_character_names = {
-    "Albedo", "Aloy", "Amber", "Arataki Itto", "Baizhu", "Barbara", "Beidou",
+    "Albedo", "Aloy", "Alhaitham", "Amber", "Arataki Itto", "Baizhu", "Barbara", "Beidou",
     "Bennett", "Candace", "Charlotte", "Chongyun", "Collei", "Cyno", "Diluc", "Diona",
     "Eula", "Faruzan", "Fischl", "Ganyu", "Gorou", "Hu Tao", "Jean",
     "Kaedehara Kazuha", "Kaeya", "Kamisato Ayaka", "Kamisato Ayato", "Kaveh",
     "Keqing", "Kirara", "Klee", "Kujou Sara", "Kuki Shinobu", "Layla", "Lisa",
     "Mona", "Nahida", "Nilou", "Ningguang", "Noelle", "Qiqi", "Raiden Shogun",
     "Razor", "Rosaria", "Sangonomiya Kokomi", "Sayu", "Shikanoin Heizou",
-    "Shenhe", "Sucrose", "Tartaglia", "Thoma", "Tighnari", "Crazy", "Venti",
+    "Shenhe", "Sucrose", "Tartaglia", "Thoma", "Tighnari", "Autumnstar", "Venti",
     "Wanderer", "Xiangling", "Xiao", "Xingqiu", "Xinyan", "Yanfei", "Yelan",
     "Yae Miko", "Yoimiya", "Yun Jin", "Zhongli"
 }
