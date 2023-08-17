@@ -16,6 +16,7 @@ import utils
 import artifact
 
 from typing import Dict, List, Union, Any, Optional
+
 PathLike = Union[str, os.PathLike]
 
 write_json = utils.write_json
@@ -25,6 +26,7 @@ load_json = utils.load_json
 ROI = (1217, 153, 612, 1135)
 
 # Crop Region of Interest for iPad
+# fmt: off
 ROIS = {
     "artifact_type" :   (  28,   77,  320,   46),
     "main_stat" :       (  26,  183,  300,   37),
@@ -37,17 +39,25 @@ ROIS = {
     "set_name_3" :      (  26,  581,  504,   53),
     "equipped" :        ( 100, 1071,  511,   63)
 }
+# fmt: on
 
 # Constants
 LIGHT_TEXT = ["artifact_type", "level", "main_stat", "value"]
 DARK_TEXT = ["equipped", "set_name_3", "set_name_4", "substats_3", "substats_4"]
 
-WHITELIST = set(string.ascii_letters + string.digits + string.whitespace + ".,+-%\':")
+WHITELIST = set(string.ascii_letters + string.digits + string.whitespace + r".,+-%\':")
 
-def copy_tesseract_font(source: PathLike = "genshin.traineddata", destination: PathLike = "/opt/homebrew/share/tessdata/genshin.traineddata") -> None:
+
+def copy_tesseract_font(
+    source: PathLike = "genshin.traineddata",
+    destination: PathLike = "/opt/homebrew/share/tessdata/genshin.traineddata",
+) -> None:
     shutil.copy(source, destination)
 
-def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbose = True) -> None:
+
+def extract_video_frames(
+    input_video_path: PathLike, output_dir: PathLike, verbose=True
+) -> None:
     """Function to extract frames from input video file
     and save them as separate frames in an output directory.
     Args:
@@ -69,14 +79,14 @@ def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbo
     # Find the number of frames
     video_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
     if verbose:
-        print ("Number of frames: ", video_length)
+        print("Number of frames: ", video_length)
     count = 0
     if verbose:
-        print ("Converting video..")
+        print("Converting video..")
     # Start converting the video
     success, frame = cap.read()
 
-    with tqdm(total = video_length) as pbar:
+    with tqdm(total=video_length) as pbar:
         while success:
             frame = crop_roi(frame, ROI)
             cv2.imwrite(str(output_dir / f"{(count+1):0>4d}.jpg"), frame)
@@ -92,14 +102,16 @@ def extract_video_frames(input_video_path: PathLike, output_dir: PathLike, verbo
     cap.release()
     # Print stats
     if verbose:
-        print ("Done extracting frames.\n%d frames extracted" % count)
-        print ("It took %d seconds for conversion." % (time_end-time_start))
+        print("Done extracting frames.\n%d frames extracted" % count)
+        print("It took %d seconds for conversion." % (time_end - time_start))
     # break
 
-def crop_roi(image: np.ndarray, roi: list[int]) -> np.ndarray:
-    return image[int(roi[1]):int(roi[1]+roi[3]), int(roi[0]):int(roi[0]+roi[2])]
 
-def _get_img_hash(img_path: PathLike, img_hash_algorithm = cv2.img_hash.pHash) -> tuple:
+def crop_roi(image: np.ndarray, roi: list[int]) -> np.ndarray:
+    return image[int(roi[1]) : int(roi[1] + roi[3]), int(roi[0]) : int(roi[0] + roi[2])]
+
+
+def _get_img_hash(img_path: PathLike, img_hash_algorithm=cv2.img_hash.pHash) -> tuple:
     image = cv2.imread(str(img_path))
     # Try cropping the image block to focus on the text difference.
     image = image[70:670, :]
@@ -107,7 +119,10 @@ def _get_img_hash(img_path: PathLike, img_hash_algorithm = cv2.img_hash.pHash) -
     img_hash = tuple(img_hash[0])
     return img_hash
 
-def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
+
+def remove_duplicate_frames(
+    cropped_frames_dir: PathLike, output_dir: PathLike, verbose=True
+) -> None:
     """
     Use image hashes to remove duplicate frames.
 
@@ -119,7 +134,7 @@ def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, 
     output_dir = pathlib.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     valid_frames = []
-    
+
     previous_hash = None
     cropped_frames_dir = pathlib.Path(cropped_frames_dir)
     if verbose:
@@ -138,7 +153,10 @@ def remove_duplicate_frames(cropped_frames_dir: PathLike, output_dir: PathLike, 
     for img_path in valid_frames:
         shutil.copy(img_path, output_dir / img_path.name)
 
-def get_artifact_components(frames_dir: PathLike, output_dir: PathLike, verbose = True) -> None:
+
+def get_artifact_components(
+    frames_dir: PathLike, output_dir: PathLike, verbose=True
+) -> None:
     # Crop all images
     frames_dir = pathlib.Path(frames_dir)
     output_dir = pathlib.Path(output_dir)
@@ -155,6 +173,7 @@ def get_artifact_components(frames_dir: PathLike, output_dir: PathLike, verbose 
                 cropped_img = crop_roi(image, roi)
                 cv2.imwrite(str(img_crop_dir / f"{key}.jpg"), cropped_img)
 
+
 def _get_rarity_blob_detector():
     # We are looking for star shapes
     # Set up the detector with default parameters.
@@ -162,15 +181,15 @@ def _get_rarity_blob_detector():
 
     # Filter by occupancy Threshold
     params.minThreshold = 200
-    
+
     # Filter by Circularity
     params.filterByCircularity = True
     params.minCircularity = 0.1
-    
+
     # Filter by Convexity
     params.filterByConvexity = True
     params.minConvexity = 0.1
-    
+
     # Filter by Inertia
     params.filterByInertia = True
     params.minInertiaRatio = 0.5
@@ -179,63 +198,78 @@ def _get_rarity_blob_detector():
     detector = cv2.SimpleBlobDetector_create(params)
     return detector
 
+
 def process_rarity(file_path: PathLike) -> int:
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY_INV)
     pad = 20
-    image = cv2.copyMakeBorder(image, pad, pad, pad, pad, borderType = cv2.BORDER_CONSTANT, value=255)
+    image = cv2.copyMakeBorder(
+        image, pad, pad, pad, pad, borderType=cv2.BORDER_CONSTANT, value=255
+    )
     # Dilating helps with light text
-    kernel = np.ones((3,3), np.uint8)
+    kernel = np.ones((3, 3), np.uint8)
     image = cv2.dilate(image, kernel, iterations=1)
-    
+
     # Detect blobs.
     detector = _get_rarity_blob_detector()
     keypoints = detector.detect(image)
     return len(keypoints)
+
 
 def _process_light_text(file_path: PathLike) -> np.ndarray:
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY_INV)
     pad = 20
-    image = cv2.copyMakeBorder(image, pad, pad, pad, pad, borderType = cv2.BORDER_CONSTANT, value=255)
+    image = cv2.copyMakeBorder(
+        image, pad, pad, pad, pad, borderType=cv2.BORDER_CONSTANT, value=255
+    )
     # Dilating helps with light text
     # kernel = np.ones((2,2), np.uint8)
     # image = cv2.dilate(image, kernel, iterations=1)
     cv2.imwrite(str(file_path.parent / f"{file_path.stem}_thresh.jpg"), image)
     return image
 
+
 def _process_dark_text(file_path: PathLike) -> np.ndarray:
     image = cv2.imread(str(file_path), cv2.IMREAD_GRAYSCALE)
 
     _, image = cv2.threshold(image, 180, 255, cv2.THRESH_BINARY)
     pad = 20
-    image = cv2.copyMakeBorder(image, pad, pad, pad, pad, borderType = cv2.BORDER_CONSTANT, value=255)
+    image = cv2.copyMakeBorder(
+        image, pad, pad, pad, pad, borderType=cv2.BORDER_CONSTANT, value=255
+    )
     # kernel = np.ones((2,2), np.uint8)
     # image = cv2.dilate(image, kernel, iterations=1)
     cv2.imwrite(str(file_path.parent / f"{file_path.stem}_thresh.jpg"), image)
     return image
 
+
 def _get_ocr_text(image: np.ndarray) -> str:
     # Config: https://stackoverflow.com/questions/44619077/pytesseract-ocr-multiple-config-options
-    config="--psm 6"
-    ocr_text = pytesseract.image_to_string(image, lang = "genshin", config=config)
+    config = "--psm 6"
+    ocr_text = pytesseract.image_to_string(image, lang="genshin", config=config)
     ocr_text = ocr_text.strip()
     ocr_text = "".join(char for char in ocr_text if char in WHITELIST)
     return ocr_text
+
 
 def ocr_artifact(artifact_dir: PathLike) -> dict[str, Union[str, list]]:
     artifact_dir = pathlib.Path(artifact_dir)
     artifact_text = {}
     artifact_text["artifact_id"] = artifact_dir.stem
     for artifact_component in LIGHT_TEXT:
-        processed_image = _process_light_text(artifact_dir / (artifact_component + ".jpg"))
+        processed_image = _process_light_text(
+            artifact_dir / (artifact_component + ".jpg")
+        )
         ocr_text = _get_ocr_text(processed_image)
         artifact_text[artifact_component] = ocr_text
 
     for artifact_component in DARK_TEXT:
-        processed_image = _process_dark_text(artifact_dir / (artifact_component + ".jpg"))
+        processed_image = _process_dark_text(
+            artifact_dir / (artifact_component + ".jpg")
+        )
         ocr_text = _get_ocr_text(processed_image)
         artifact_text[artifact_component] = ocr_text
 
@@ -243,11 +277,18 @@ def ocr_artifact(artifact_dir: PathLike) -> dict[str, Union[str, list]]:
     artifact_text["rarity"] = rarity
 
     # Split substats newlines into list (if double new line, don't keep a blank line)
-    artifact_text["substats_3"] = [x for x in artifact_text["substats_3"].split("\n") if x]
-    artifact_text["substats_4"] = [x for x in artifact_text["substats_4"].split("\n") if x]
+    artifact_text["substats_3"] = [
+        x for x in artifact_text["substats_3"].split("\n") if x
+    ]
+    artifact_text["substats_4"] = [
+        x for x in artifact_text["substats_4"].split("\n") if x
+    ]
     return artifact_text
 
-def run_ocr_on_artifact_components(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> dict[str, dict[str, list]]:
+
+def run_ocr_on_artifact_components(
+    artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose=True
+) -> dict[str, dict[str, list]]:
     if verbose:
         print("Running OCR...")
 
@@ -265,7 +306,10 @@ def run_ocr_on_artifact_components(artifact_component_dir: PathLike, ocr_output_
     write_json(artifacts, ocr_output_dir / "artifacts.json")
     return artifacts
 
-def run_ocr_on_artifact_components_multiprocess(artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose = True) -> dict[str, dict[str, list]]:
+
+def run_ocr_on_artifact_components_multiprocess(
+    artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose=True
+) -> dict[str, dict[str, list]]:
     if verbose:
         print("Running OCR...")
 
@@ -276,7 +320,7 @@ def run_ocr_on_artifact_components_multiprocess(artifact_component_dir: PathLike
 
     artifacts = {}
     artifact_dirs = [dir for dir in artifact_component_dirs if dir.is_dir()]
-    progress_bar = tqdm(total = len(artifact_dirs))
+    progress_bar = tqdm(total=len(artifact_dirs))
     with concurrent.futures.ProcessPoolExecutor() as executor:
         futures = []
         for artifact_dir in artifact_dirs:
@@ -292,12 +336,12 @@ def run_ocr_on_artifact_components_multiprocess(artifact_component_dir: PathLike
     return artifacts
 
 
-def replace_artifacts(gi_data_path: PathLike, 
-                      all_artifacts_json = "artifacts_good_format.json", 
-                      updated_gi_data_path = "gi_data_updated.json",
-                      verbose = True
-    ) -> None:
-
+def replace_artifacts(
+    gi_data_path: PathLike,
+    all_artifacts_json="artifacts_good_format.json",
+    updated_gi_data_path="gi_data_updated.json",
+    verbose=True,
+) -> None:
     gi_data = load_json(gi_data_path)
     all_artifacts = load_json(all_artifacts_json)
 
@@ -309,7 +353,10 @@ def replace_artifacts(gi_data_path: PathLike,
     if verbose:
         print(f"Created updated GI Database: {updated_gi_data_path}")
 
-def remove_duplicate_artifacts(artifacts: dict[str, dict[str, list]]) -> list[artifact.Artifact]:
+
+def remove_duplicate_artifacts(
+    artifacts: dict[str, dict[str, list]]
+) -> list[artifact.Artifact]:
     all_artifacts = []
     previous_artifact = None
     for _id, ocr_json in sorted(artifacts.items()):
@@ -320,12 +367,15 @@ def remove_duplicate_artifacts(artifacts: dict[str, dict[str, list]]) -> list[ar
 
     return all_artifacts
 
-def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, verbose = True) -> None:
+
+def main(
+    video_path="artifacts.MOV", artifact_dir: Optional[PathLike] = None, verbose=True
+) -> None:
     video_path = pathlib.Path(video_path)
 
     # Create a directory to store intermediate results.
     # If program crashes, try to detect existing directory to continue where it crashed.
-    artifact_dir_name = f"_artifact_temp"
+    artifact_dir_name = "_artifact_temp"
     if artifact_dir is None:
         artifact_dir = pathlib.Path().cwd() / artifact_dir_name
     else:
@@ -344,7 +394,6 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
     ocr_output_dir_name = "ocr_output"
     ocr_output_dir = artifact_dir / ocr_output_dir_name
 
-
     # Extract each video frame and crop the Artifact region.
     if not valid_frames_dir.exists():
         # The next step directory will exist if this step has been completed.
@@ -362,7 +411,9 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
 
     # Run OCR
     if not (ocr_output_dir / "artifacts.json").exists():
-        artifacts = run_ocr_on_artifact_components_multiprocess(artifact_components_dir, ocr_output_dir)
+        artifacts = run_ocr_on_artifact_components_multiprocess(
+            artifact_components_dir, ocr_output_dir
+        )
 
     # Remove duplicate artifacts
     artifacts = load_json(ocr_output_dir / "artifacts.json")
@@ -370,16 +421,21 @@ def main(video_path = "artifacts.MOV", artifact_dir: Optional[PathLike] = None, 
     print(f"Found {len(all_artifacts)} total artifacts")
 
     # Save artifacts to good format
-    artifact.artifact_list_to_good_format_json(all_artifacts, output_path="artifacts_good_format.json")
+    artifact.artifact_list_to_good_format_json(
+        all_artifacts, output_path="artifacts_good_format.json"
+    )
 
     # Find most recently downloaded GI Database
     gi_data_path = get_most_recent_gi_database(download_dir)
     # Replace artifacts and write to updated_gi_data_path
-    replace_artifacts(gi_data_path = gi_data_path, 
-        all_artifacts_json="artifacts_good_format.json", 
-        updated_gi_data_path="gi_data_updated.json")
+    replace_artifacts(
+        gi_data_path=gi_data_path,
+        all_artifacts_json="artifacts_good_format.json",
+        updated_gi_data_path="gi_data_updated.json",
+    )
 
     # shutil.rmtree(artifact_dir)
+
 
 def get_most_recent_gi_database(search_dir) -> Optional[PathLike]:
     # Find most recently downloaded GI Database
@@ -392,11 +448,9 @@ def get_most_recent_gi_database(search_dir) -> Optional[PathLike]:
         return database_files[-1]
 
 
-
 if __name__ == "__main__":
     copy_tesseract_font()
     download_dir = pathlib.Path("~/Downloads").expanduser()
 
     # Run artifact extractor on artifacts.MOV located in download directory
     main(download_dir / "artifacts.MOV")
- 
