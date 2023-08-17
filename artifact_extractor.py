@@ -121,7 +121,7 @@ def _get_img_hash(img_path: PathLike, img_hash_algorithm=cv2.img_hash.pHash) -> 
 
 
 def remove_duplicate_frames(
-    cropped_frames_dir: PathLike, output_dir: PathLike, verbose=True
+    cropped_frames_dir: PathLike, output_dir: PathLike, verbose: bool = True
 ) -> None:
     """
     Use image hashes to remove duplicate frames.
@@ -155,7 +155,7 @@ def remove_duplicate_frames(
 
 
 def get_artifact_components(
-    frames_dir: PathLike, output_dir: PathLike, verbose=True
+    frames_dir: PathLike, output_dir: PathLike, verbose: bool = True
 ) -> None:
     # Crop all images
     frames_dir = pathlib.Path(frames_dir)
@@ -287,7 +287,7 @@ def ocr_artifact(artifact_dir: PathLike) -> dict[str, Union[str, list]]:
 
 
 def run_ocr_on_artifact_components(
-    artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose=True
+    artifact_component_dir: PathLike, ocr_output_dir: PathLike, verbose: bool = True
 ) -> dict[str, dict[str, list]]:
     if verbose:
         print("Running OCR...")
@@ -369,13 +369,15 @@ def remove_duplicate_artifacts(
 
 
 def main(
-    video_path="artifacts.MOV", artifact_dir: Optional[PathLike] = None, verbose=True
+    download_dir: str,
+    video_file_name: str = "artifacts.MOV",
+    artifact_dir: Optional[PathLike] = None,
+    artifact_dir_name: str = "_artifact_temp",
 ) -> None:
-    video_path = pathlib.Path(video_path)
+    video_file_name = pathlib.Path(video_file_name)
 
     # Create a directory to store intermediate results.
     # If program crashes, try to detect existing directory to continue where it crashed.
-    artifact_dir_name = "_artifact_temp"
     if artifact_dir is None:
         artifact_dir = pathlib.Path().cwd() / artifact_dir_name
     else:
@@ -397,7 +399,7 @@ def main(
     # Extract each video frame and crop the Artifact region.
     if not valid_frames_dir.exists():
         # The next step directory will exist if this step has been completed.
-        extract_video_frames(video_path, video_output_dir)
+        extract_video_frames(video_file_name, video_output_dir)
 
     # Remove duplicate frames using image hashes.
     if not artifact_components_dir.exists():
@@ -453,4 +455,7 @@ if __name__ == "__main__":
     download_dir = pathlib.Path("~/Downloads").expanduser()
 
     # Run artifact extractor on artifacts.MOV located in download directory
-    main(download_dir / "artifacts.MOV")
+    main(
+        download_dir=download_dir,
+        video_file_name=download_dir / "artifacts.MOV",
+    )
