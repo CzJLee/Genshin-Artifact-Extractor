@@ -156,6 +156,7 @@ class Artifact():
                  set_name_4=None,
                  substats_3=None,
                  substats_4=None,
+                 artifact_id=None,
                  file_path=None):
 
         self.artifact_type = self._format_artifact_type(artifact_type)
@@ -175,7 +176,7 @@ class Artifact():
             self.substats = self._format_substats(substats_3, substats_4)
 
         self.equipped = self._format_equipped(equipped)
-
+        self.artifact_id = artifact_id
         self.file_path = file_path
 
     # def to_dict(self):
@@ -344,7 +345,7 @@ class Artifact():
 
         for substat in substats:
             substat = substat.strip()
-            match = re.match("([\w\s]+)\+([\d.%]+)", substat)
+            match = re.match(r"([\w\s]+)\+([\d.%]+)", substat)
             substat_type = match.group(1)
             substat_value = match.group(2)
             if substat_value.endswith("%"):
@@ -376,7 +377,9 @@ class Artifact():
                    set_name_4=ocr_json["set_name_4"],
                    substats_3=ocr_json["substats_3"],
                    substats_4=ocr_json["substats_4"],
-                   equipped=ocr_json["equipped"])
+                   equipped=ocr_json["equipped"],
+                   artifact_id=ocr_json["artifact_id"],
+                   )
 
 
 def artifact_list_to_good_format_json(artifact_list: list[Artifact],
@@ -384,7 +387,11 @@ def artifact_list_to_good_format_json(artifact_list: list[Artifact],
                                       verbose=True):
     artifact_list_good_format = []
     for artifact in artifact_list:
-        artifact_list_good_format.append(artifact.to_good_format())
+        try:
+            artifact_list_good_format.append(artifact.to_good_format())
+        except Exception as e:
+            print(artifact.artifact_id)
+            raise
 
     artifacts_good_format = {
         "format": "GOOD",

@@ -8,12 +8,14 @@ import string
 import tempfile
 import re
 import os
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import concurrent.futures
 import shutil
-
+from matplotlib import pyplot as plt
 import utils
 import artifact
+import dataclasses
+import constants
 
 from typing import Dict, List, Union, Any, Optional
 
@@ -22,36 +24,18 @@ PathLike = Union[str, os.PathLike]
 write_json = utils.write_json
 load_json = utils.load_json
 
-# MAGIC NUMBERS
-ROI = (1217, 153, 612, 1135)
-
-# Crop Region of Interest for iPad
-# fmt: off
-ROIS = {
-    "artifact_type" :   (  28,   77,  320,   46),
-    "main_stat" :       (  26,  183,  300,   37),
-    "value" :           (  26,  219,  208,   62),
-    "level" :           (  38,  385,   65,   30),
-    "rarity":           (  26,  290,  254,   45),
-    "substats_4" :      (  59,  440,  428,  192),
-    "set_name_4" :      (  26,  629,  504,   53),
-    "substats_3" :      (  59,  440,  428,  145),
-    "set_name_3" :      (  26,  581,  504,   53),
-    "equipped" :        ( 100, 1071,  511,   63)
-}
-# fmt: on
-
-# Constants
-LIGHT_TEXT = ["artifact_type", "level", "main_stat", "value"]
-DARK_TEXT = ["equipped", "set_name_3", "set_name_4", "substats_3", "substats_4"]
-
-WHITELIST = set(string.ascii_letters + string.digits + string.whitespace + r".,+-%\':")
+ROI = constants.ROI
+ROIS = constants.ROIS
+LIGHT_TEXT = constants.LIGHT_TEXT
+DARK_TEXT = constants.DARK_TEXT
+WHITELIST = constants.WHITELIST
 
 
 def copy_tesseract_font(
     source: PathLike = "genshin.traineddata",
     destination: PathLike = "/opt/homebrew/share/tessdata/genshin.traineddata",
 ) -> None:
+    """Copy Tesseract font training data to its required directory incase it is missing."""
     shutil.copy(source, destination)
 
 
@@ -102,13 +86,16 @@ def extract_video_frames(
     cap.release()
     # Print stats
     if verbose:
-        print("Done extracting frames.\n%d frames extracted" % count)
-        print("It took %d seconds for conversion." % (time_end - time_start))
+        print(f"Done extracting frames.\n {count} frames extracted")
+        print(f"It took {(time_end - time_start)} seconds for conversion.")
     # break
 
 
-def crop_roi(image: np.ndarray, roi: list[int]) -> np.ndarray:
-    return image[int(roi[1]) : int(roi[1] + roi[3]), int(roi[0]) : int(roi[0] + roi[2])]
+def crop_roi(image: np.ndarray, roi: constants.CropROI) -> np.ndarray:
+    return image[
+        int(roi.top) : int(roi.top + roi.height),
+        int(roi.left) : int(roi.left + roi.width),
+    ]
 
 
 def _get_img_hash(img_path: PathLike, img_hash_algorithm=cv2.img_hash.pHash) -> tuple:
@@ -366,6 +353,78 @@ def remove_duplicate_artifacts(
             previous_artifact = next_artifact
 
     return all_artifacts
+
+
+def locate_template(
+    image: np.ndarray,
+    template_image_path: PathLike = constants.TEMPLATE_IMAGE_PATH,
+):
+    template = cv2.imread(str(template_image_path))
+    res = cv2.matchTemplate(image, template, method=cv2.TM_CCOEFF)
+    _, _, _, max_loc = cv2.minMaxLoc(res)
+    return max_loc
+
+
+def crop_from_template_match(
+    image: np.ndarray, template_coordinates: tuple[int, int]
+) -> np.ndarray:
+    match_w, match_h = template_coordinates
+    artifact_left = match_w - constants.HORIZONTAL_OFFSET
+    artifact_top = match_h - constants.VERTICAL_OFFSET
+
+    artifact_width = 874
+    artifact_height = 1731
+
+    roi = constants.CropROI(
+        left=artifact_left,
+        top=artifact_top,
+        width=artifact_width,
+        height=artifact_height,
+    )
+
+    return crop_roi(image, roi)
+
+
+def resize_artifact(
+    artifact: np.ndarray,
+    artifact_expected_width: int = constants.ARTIFACT_EXPECTED_WIDTH,
+) -> np.ndarray:
+    # Only width matters.
+    scaling_factor = artifact_expected_width / artifact.shape[1]
+    new_height = int(artifact.shape[0] * scaling_factor)
+    return cv2.resize(
+        artifact, (artifact_expected_width, new_height), interpolation=cv2.INTER_CUBIC
+    )
+
+
+def crop_new_artifact(artifact_image_path: PathLike, output_dir: PathLike) -> None:
+    artifact_image_path = pathlib.Path(artifact_image_path)
+    output_dir = pathlib.Path(output_dir)
+    output_dir.mkdir(exist_ok=True, parents=True)
+    image = cv2.imread(str(artifact_image_path))
+
+    template_coordinates = locate_template(image)
+    cropped_artifact = crop_from_template_match(image, template_coordinates)
+    resized_artifact = resize_artifact(cropped_artifact)
+    new_image_path = output_dir / artifact_image_path.with_suffix(".jpg").name
+    cv2.imwrite(str(new_image_path), resized_artifact)
+
+
+def crop_new_artifacts_multiprocess(
+    artifact_dir: PathLike, output_dir: PathLike
+) -> None:
+    artifact_image_paths = list(pathlib.Path(artifact_dir).iterdir())
+
+    progress_bar = tqdm(total=len(artifact_image_paths))
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = []
+        for artifact_path in artifact_image_paths:
+            future = executor.submit(crop_new_artifact, artifact_path, output_dir)
+            # Add callback up update tqdm progress bar.
+            future.add_done_callback(lambda _: progress_bar.update())
+            futures.append(future)
+
+        concurrent.futures.wait(futures, return_when=concurrent.futures.ALL_COMPLETED)
 
 
 def main(

@@ -6,3 +6,5 @@ artifacts_good_format.json
 gi_data_updated.json
 __pycache__/
 _artifact_temp/
+_new_artifact_temp/
+.DS_Store
