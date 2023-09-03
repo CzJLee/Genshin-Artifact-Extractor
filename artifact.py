@@ -49,7 +49,7 @@ class InvalidEquippedError(ArtifactError):
     pass
 
 
-with open("ArtifactInfo.json", "r") as f:
+with open("ArtifactInfo.json", "r", encoding="utf-8") as f:
     artifact_info = json.loads(f.read())
 
 # Valid artifact_type

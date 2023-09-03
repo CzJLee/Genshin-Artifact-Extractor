@@ -9,12 +9,19 @@
 			"Anemo",
 			"Cryo",
 			"Dendro",
+			"Eonothem",
 			"genshin",
 			"imwrite",
+			"Lavawalker",
+			"Millelith",
 			"Pyro",
 			"pytesseract",
 			"ROIS",
-			"tesseract"
+			"substat",
+			"substats",
+			"tesseract",
+			"Thundersoother",
+			"Venerer"
 		],
 		"editor.insertSpaces": true
 	}
