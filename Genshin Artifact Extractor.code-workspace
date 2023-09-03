@@ -6,8 +6,12 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"Anemo",
+			"Cryo",
+			"Dendro",
 			"genshin",
 			"imwrite",
+			"Pyro",
 			"pytesseract",
 			"ROIS",
 			"tesseract"

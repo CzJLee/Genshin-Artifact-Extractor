@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import cv2
 import pathlib
 import numpy as np
@@ -8,7 +10,9 @@ import pytesseract
 import string
 import re
 import tempfile
-from fastprogress import fastprogress
+import dataclasses
+from collections.abc import Sequence
+from typing import Any
 
 from typing import Optional
 
@@ -53,7 +57,7 @@ class InvalidEquippedError(ArtifactError):
     pass
 
 
-with open("ArtifactInfo.json") as f:
+with open("ArtifactInfo.json", "r") as f:
     artifact_info = json.loads(f.read())
 
 # Valid artifact_type
@@ -86,7 +90,7 @@ _valid_set_name = {
     "Blizzard Strayer", "Heart of Depth", "Tenacity of the Millelith",
     "Pale Flame", "Emblem of Severed Fate", "Shimenawa's Reminiscence",
     "Husk of Opulent Dreams", "Ocean-Hued Clam", "Echoes of an Offering",
-    "Vermillion Hereafter", "Retracing Bolide", "Deepwood Memories",
+    "Vermillion Hereafter", "Deepwood Memories",
     "Gilded Dreams", "Flower of Paradise Lost", "Desert Pavilion Chronicle",
     "Nymph's Dream", "Vourukasha's Glow", "Marechaussee Hunter", "Golden Troupe",
 }
@@ -101,7 +105,7 @@ _valid_substats = {
 #     _valid_substats.append(substat_name)
 
 # Valid character names
-# Not currently used. 
+# Not currently used.
 _valid_character_names = {
     "Albedo", "Aloy", "Alhaitham", "Amber", "Arataki Itto", "Baizhu", "Barbara", "Beidou",
     "Bennett", "Candace", "Charlotte", "Chongyun", "Collei", "Cyno", "Diluc", "Diona",
@@ -139,7 +143,6 @@ def filter_chars(word, whitelist=None, blacklist=None):
         word = "".join(char for char in word if char not in blacklist)
 
     return word
-
 
 class Artifact():
 
@@ -191,8 +194,26 @@ class Artifact():
     #         "equipped" : self.equipped
     #     }
 
-    def __str__(self):
+    def __repr__(self) -> str:
+        return f"""
+Artifact(
+    artifact_type="{self.artifact_type}",
+    level="{self.level}",
+    rarity="{self.rarity}",
+    main_stat="{self.main_stat}",
+    value="{self.value}",
+    set_name="{self.set_name}",
+    substats="{self.substats}",
+    equipped="{self.equipped}",
+    artifact_id="{self.artifact_id}",
+    file_path="{self.file_path}",
+)
+""".strip()
+
+
+    def __str__(self) -> str:
         formatted_str = """
+            {artifact_id}
             {artifact_type} ({rarity}*)
 
             {main_stat} (+{level})
@@ -219,7 +240,8 @@ class Artifact():
                                              value=self.value,
                                              substats=substats_formatted,
                                              set_name=self.set_name,
-                                             equipped=self.equipped)
+                                             equipped=self.equipped,
+                                             artifact_id=self.artifact_id)
 
         # Remove leading whitespace on each
         formatted_str = formatted_str.strip()
@@ -227,7 +249,7 @@ class Artifact():
         formatted_str_lines = [line.strip() for line in formatted_str_lines]
         return "\n".join(formatted_str_lines)
 
-    def __eq__(self, other: Optional["Artifact"]):
+    def __eq__(self, other: Optional["Artifact"]) -> bool:
         if other is None:
             return False
 
@@ -239,7 +261,7 @@ class Artifact():
             self.equipped == other.equipped
         ])
 
-    def to_good_format(self):
+    def to_good_format(self) -> dict[str, Any]:
         # https://frzyc.github.io/genshin-optimizer/#/doc
 
         substat_list = []
@@ -273,7 +295,7 @@ class Artifact():
             "substats": substat_list
         }
 
-    def _format_artifact_type(self, artifact_type):
+    def _format_artifact_type(self, artifact_type: str) -> str:
         artifact_type = filter_chars(artifact_type, whitelist=_whitelist_names)
         artifact_type = artifact_type.strip()
         if artifact_type in _valid_artifact_type:
@@ -284,7 +306,7 @@ class Artifact():
                 f"Can not match artifact type to expected format: {artifact_type}"
             )
 
-    def _format_level(self, level):
+    def _format_level(self, level: str) -> int:
         level = level.strip()
         if re.match("\+\d+", level):
             return int(level[1:])
@@ -292,14 +314,14 @@ class Artifact():
             raise InvalidLevelError(
                 f"Can not match level to expected format: {level}")
 
-    def _format_rarity(self, rarity):
+    def _format_rarity(self, rarity: int) -> int:
         if 1 <= rarity <= 5:
             return int(rarity)
         else:
             raise InvalidRarityError(
                 f"Can not match rarity to expected format: {rarity}")
 
-    def _format_main_stat(self, main_stat):
+    def _format_main_stat(self, main_stat: str) -> str:
         main_stat = filter_chars(main_stat, whitelist=_whitelist_names)
         main_stat = main_stat.strip()
 
@@ -314,11 +336,11 @@ class Artifact():
         raise InvalidMainStatError(
             f"Can not match main_stat to expected value: >{main_stat}<")
 
-    def _format_value(self, value):
+    def _format_value(self, value: str) -> str:
         value = value.strip()
         return value
 
-    def _format_set_name(self, set_name, set_name_4=""):
+    def _format_set_name(self, set_name: str, set_name_4: str="") -> str:
         set_name = filter_chars(set_name, whitelist=_whitelist_names)
         set_name_4 = filter_chars(set_name_4, whitelist=_whitelist_names)
 
@@ -333,7 +355,7 @@ class Artifact():
                 f"Can not match set name to expected value: >{set_name}< or >{set_name_4}<"
             )
 
-    def _format_substats(self, substats, substats_4=None):
+    def _format_substats(self, substats: Sequence[str], substats_4: Sequence[str] | None =None) -> dict[str, float]:
         if substats_4 is None:
             substats = substats
         elif self.num_substats == 4:
@@ -357,17 +379,17 @@ class Artifact():
         # self.num_substats = len(substat_values)
         return substat_values
 
-    def _format_equipped(self, equipped):
+    def _format_equipped(self, equipped: str) -> str:
         equipped = filter_chars(equipped, whitelist=_whitelist_names)
         equipped = equipped.strip()
-        match = re.match("(Equipped)\s([\w\s]+)", equipped)
+        match = re.match(r"(Equipped)\s([\w\s]+)", equipped)
         if match:
             return match.group(2)
         else:
             return None
 
     @classmethod
-    def from_ocr_json(cls, ocr_json: dict):
+    def from_ocr_json(cls, ocr_json: dict) -> Artifact:
         return cls(artifact_type=ocr_json["artifact_type"],
                    level=ocr_json["level"],
                    rarity=ocr_json["rarity"],
@@ -384,7 +406,7 @@ class Artifact():
 
 def artifact_list_to_good_format_json(artifact_list: list[Artifact],
                                       output_path="artifacts_good_format.json",
-                                      verbose=True):
+                                      verbose=True) -> None:
     artifact_list_good_format = []
     for artifact in artifact_list:
         try:
