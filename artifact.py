@@ -7,9 +7,13 @@ from collections.abc import Sequence
 from typing import Any
 
 from typing import Optional
-
+import os
+import cv2
 import utils
+import pathlib
 import good_format
+
+PathLike = os.PathLike | str
 
 
 class ArtifactError(Exception):
@@ -234,6 +238,14 @@ def filter_chars(word, whitelist=None, blacklist=None):
         word = "".join(char for char in word if char not in blacklist)
 
     return word
+
+class ArtifactImage:
+    """Image of a new artifact."""
+
+    def __init__(self, image_path: PathLike):
+        self.image_path = pathlib.Path(image_path)
+        self.image = cv2.imread(str(self.image_path))
+        self.height, self.width, *_ = self.image.shape
 
 
 class Artifact:
