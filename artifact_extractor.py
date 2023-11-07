@@ -16,10 +16,11 @@ import utils
 import artifact
 import dataclasses
 import constants
+import datetime
 
-from typing import Dict, List, Union, Any, Optional
+from typing import Union, Any, Optional
 
-PathLike = Union[str, os.PathLike]
+PathLike = str | os.PathLike
 
 write_json = utils.write_json
 load_json = utils.load_json
@@ -358,61 +359,133 @@ def remove_duplicate_artifacts(
 def locate_template(
     image: np.ndarray,
     template_image_path: PathLike = constants.TEMPLATE_IMAGE_PATH,
-):
+) -> tuple[int, int]:
+    """Find the pixel coordinates of a recognized +0 icon in an image of a new artifact.
+
+    Args:
+        image: Image of a new artifact.
+        template_image_path: Path to the +0 template image.
+
+    Returns:
+        Top left corner pixel coordinates of the recognized +0 icon.
+    """
     template = cv2.imread(str(template_image_path))
     res = cv2.matchTemplate(image, template, method=cv2.TM_CCOEFF)
     _, _, _, max_loc = cv2.minMaxLoc(res)
     return max_loc
 
 
-def crop_from_template_match(
-    image: np.ndarray, template_coordinates: tuple[int, int]
-) -> np.ndarray:
-    match_w, match_h = template_coordinates
-    artifact_left = match_w - constants.HORIZONTAL_OFFSET
-    artifact_top = match_h - constants.VERTICAL_OFFSET
-
-    artifact_width = 874
-    artifact_height = 1731
-
-    roi = constants.CropROI(
-        left=artifact_left,
-        top=artifact_top,
-        width=artifact_width,
-        height=artifact_height,
-    )
-
-    return crop_roi(image, roi)
-
-
 def resize_artifact(
-    artifact: np.ndarray,
+    image: np.ndarray,
     artifact_expected_width: int = constants.ARTIFACT_EXPECTED_WIDTH,
 ) -> np.ndarray:
+    """Resizes an artifact image crop to the expected width for OCR to work."""
     # Only width matters.
-    scaling_factor = artifact_expected_width / artifact.shape[1]
-    new_height = int(artifact.shape[0] * scaling_factor)
+    scaling_factor = artifact_expected_width / image.shape[1]
+    new_height = int(image.shape[0] * scaling_factor)
     return cv2.resize(
-        artifact, (artifact_expected_width, new_height), interpolation=cv2.INTER_CUBIC
+        image, (artifact_expected_width, new_height), interpolation=cv2.INTER_CUBIC
     )
+
+
+def locate_and_crop_template(image: artifact.ArtifactImage) -> np.ndarray:
+    """
+    Locate the +0 template in an artifact image and crop the image to the Artifact box.
+
+    Args:
+        image (artifact.ArtifactImage): Artifact Image representing a new artifact.
+
+    Raises:
+        ValueError: If the image dimensions are unrecognized.
+
+    Returns:
+        np.ndarray: Cropped and resized artifact crop image.
+    """
+    # Get image coordinates to determine with template match to use.
+    image_dimensions = f"{image.width}x{image.height}"
+    template_image_path = pathlib.Path("templates") / f"{image_dimensions}.png"
+
+    if not template_image_path.exists():
+        raise ValueError(
+            f"No template found for Artifact image with dimensions {image_dimensions}"
+        )
+
+    match_w, match_h = locate_template(image.image, template_image_path)
+
+    # Lookup dict to get the correct crop ROI offset for the image dimensions.
+    offset = constants.OFFSET_FOR_IMAGE_DIMENSIONS[(image.width, image.height)]
+    roi = constants.CropROI(
+        left=match_w - offset.horizontal_offset,
+        top=match_h - offset.vertical_offset,
+        width=offset.artifact_width,
+        height=offset.artifact_height,
+    )
+
+    # Crop the image.
+    image_crop = crop_roi(image, roi)
+
+    # Resize to expected dimensions.
+    return resize_artifact(image_crop)
+
+
+# def crop_from_template_match(
+#     image: np.ndarray, template_coordinates: tuple[int, int]
+# ) -> np.ndarray:
+#     """Given the coordinates of a recognized +0 icon, crop the artifact image."""
+#     match_w, match_h = template_coordinates
+#     artifact_left = match_w - constants.HORIZONTAL_OFFSET
+#     artifact_top = match_h - constants.VERTICAL_OFFSET
+
+#     artifact_width = 874
+#     artifact_height = 1731
+
+#     roi = constants.CropROI(
+#         left=artifact_left,
+#         top=artifact_top,
+#         width=artifact_width,
+#         height=artifact_height,
+#     )
+
+#     return crop_roi(image, roi)
 
 
 def crop_new_artifact(artifact_image_path: PathLike, output_dir: PathLike) -> None:
-    artifact_image_path = pathlib.Path(artifact_image_path)
+    """
+    Read a new artifact image from disk and generate a cropped image.
+
+    Args:
+        artifact_image_path: Path to the new artifact image.
+        output_dir: Directory to write cropped image.
+    """
+    image = artifact.ArtifactImage(artifact_image_path)
     output_dir = pathlib.Path(output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
-    image = cv2.imread(str(artifact_image_path))
 
-    template_coordinates = locate_template(image)
-    cropped_artifact = crop_from_template_match(image, template_coordinates)
-    resized_artifact = resize_artifact(cropped_artifact)
-    new_image_path = output_dir / artifact_image_path.with_suffix(".jpg").name
-    cv2.imwrite(str(new_image_path), resized_artifact)
+    image_crop = locate_and_crop_template(image)
+
+    # TODO: Modify new file creation time.
+
+    # Get image file creation time.
+    creation_timestamp = pathlib.Path(artifact_image_path).stat().st_ctime
+    creation_time = datetime.datetime.fromtimestamp(creation_timestamp)
+
+    # Format file name simply by tacking on creation time at the end.
+    new_image_path = output_dir / artifact_image_path.with_suffix(
+        ".jpg"
+    ).name + creation_time.strftime(constants.STRTIME_FORMAT)
+
+    cv2.imwrite(str(new_image_path), image_crop)
 
 
 def crop_new_artifacts_multiprocess(
     artifact_dir: PathLike, output_dir: PathLike
 ) -> None:
+    """Runs crop_new_artifact as a concurrent multiprocess for an entire directory of new artifacts.
+    
+    Args:
+        artifact_dir: Directory containing new artifact images.
+        output_dir: Directory to write cropped images.
+    """
     artifact_image_paths = list(pathlib.Path(artifact_dir).iterdir())
 
     progress_bar = tqdm(total=len(artifact_image_paths))
