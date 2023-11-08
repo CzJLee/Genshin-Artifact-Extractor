@@ -348,7 +348,11 @@ def remove_duplicate_artifacts(
     all_artifacts = []
     previous_artifact = None
     for _id, ocr_json in sorted(artifacts.items()):
-        next_artifact = artifact.Artifact.from_ocr_json(ocr_json)
+        try:
+            next_artifact = artifact.Artifact.from_ocr_json(ocr_json)
+        except artifact.ArtifactError:
+            print(_id)
+            raise
         if next_artifact != previous_artifact:
             all_artifacts.append(next_artifact)
             previous_artifact = next_artifact
@@ -422,7 +426,7 @@ def locate_and_crop_template(image: artifact.ArtifactImage) -> np.ndarray:
     )
 
     # Crop the image.
-    image_crop = crop_roi(image, roi)
+    image_crop = crop_roi(image.image, roi)
 
     # Resize to expected dimensions.
     return resize_artifact(image_crop)
@@ -457,6 +461,7 @@ def crop_new_artifact(artifact_image_path: PathLike, output_dir: PathLike) -> No
         artifact_image_path: Path to the new artifact image.
         output_dir: Directory to write cropped image.
     """
+    artifact_image_path = pathlib.Path(artifact_image_path)
     image = artifact.ArtifactImage(artifact_image_path)
     output_dir = pathlib.Path(output_dir)
     output_dir.mkdir(exist_ok=True, parents=True)
@@ -466,14 +471,16 @@ def crop_new_artifact(artifact_image_path: PathLike, output_dir: PathLike) -> No
     # TODO: Modify new file creation time.
 
     # Get image file creation time.
-    creation_timestamp = pathlib.Path(artifact_image_path).stat().st_ctime
+    creation_timestamp = pathlib.Path(artifact_image_path).stat().st_birthtime
     creation_time = datetime.datetime.fromtimestamp(creation_timestamp)
 
     # Format file name simply by tacking on creation time at the end.
-    new_image_path = output_dir / artifact_image_path.with_suffix(
-        ".jpg"
-    ).name + creation_time.strftime(constants.STRTIME_FORMAT)
-
+    new_image_name = (
+        artifact_image_path.stem + " "
+        + creation_time.strftime(constants.STRTIME_FORMAT)
+        + ".jpg"
+    )
+    new_image_path = output_dir / new_image_name
     cv2.imwrite(str(new_image_path), image_crop)
 
 
@@ -481,7 +488,7 @@ def crop_new_artifacts_multiprocess(
     artifact_dir: PathLike, output_dir: PathLike
 ) -> None:
     """Runs crop_new_artifact as a concurrent multiprocess for an entire directory of new artifacts.
-    
+
     Args:
         artifact_dir: Directory containing new artifact images.
         output_dir: Directory to write cropped images.
