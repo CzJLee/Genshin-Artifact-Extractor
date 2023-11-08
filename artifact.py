@@ -8,9 +8,11 @@ from typing import Any
 
 from typing import Optional
 import os
+import constants
 import cv2
 import utils
 import pathlib
+import datetime
 import good_format
 
 PathLike = os.PathLike | str
@@ -265,6 +267,7 @@ class Artifact:
         substats_4=None,
         artifact_id=None,
         file_path=None,
+        creation_time: datetime.datetime = None
     ):
         self.artifact_type = self._format_artifact_type(artifact_type)
         self.level = self._format_level(level)
@@ -286,17 +289,21 @@ class Artifact:
         self.artifact_id = artifact_id
         self.file_path = file_path
 
-    # def to_dict(self):
-    #     return {
-    #         "artifact_type" : self.artifact_type,
-    #         "level" : self.level,
-    #         "rarity" : self.rarity,
-    #         "main_stat" : self.main_stat,
-    #         "value" : self.value,
-    #         "set_name" : self.set_name,
-    #         "substats" : self.substats,
-    #         "equipped" : self.equipped
-    #     }
+        self.creation_time = creation_time
+
+    def to_dict(self):
+        return {
+            "artifact_type" : self.artifact_type,
+            "level" : self.level,
+            "rarity" : self.rarity,
+            "main_stat" : self.main_stat,
+            "value" : self.value,
+            "set_name" : self.set_name,
+            "substats" : self.substats,
+            "equipped" : self.equipped,
+            "artifact_id" : self.artifact_id,
+            "creation_time" : datetime.datetime.strptime(" ".join(self.artifact_id.split(" ")[-2:]), "%Y-%m-%d %H:%M:%S")
+        }
 
     def __repr__(self) -> str:
         return f"""
