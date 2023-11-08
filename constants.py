@@ -38,7 +38,7 @@ OFFSET_FOR_IMAGE_DIMENSIONS = {
     ),
     (3840, 2160): CropOffset(
         horizontal_offset=47,
-        vertical_offset=512,
+        vertical_offset=510,
         artifact_width=819,
         artifact_height=1620,
     ),
