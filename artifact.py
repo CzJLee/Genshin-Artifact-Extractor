@@ -129,7 +129,7 @@ _valid_set_name = {
     "Vourukasha's Glow",
     "Marechaussee Hunter",
     "Golden Troupe",
-    "Nighttime Whispers in the Echoing Woods",
+    "Nighttime Whispers in the Echoing",
     "Song of Days Past",
 }
 
@@ -278,6 +278,9 @@ class Artifact:
         file_path=None,
         creation_time: datetime.datetime = None
     ):
+        self.artifact_id = artifact_id
+        self.file_path = file_path
+
         self.artifact_type = self._format_artifact_type(artifact_type)
         self.level = self._format_level(level)
         self.rarity = self._format_rarity(rarity)
@@ -295,8 +298,6 @@ class Artifact:
             self.substats = self._format_substats(substats_3, substats_4)
 
         self.equipped = self._format_equipped(equipped)
-        self.artifact_id = artifact_id
-        self.file_path = file_path
 
         self.creation_time = creation_time
 
@@ -478,7 +479,7 @@ Artifact(
             return set_name_4
         else:
             raise InvalidSetNameError(
-                f"Can not match set name to expected value: >{set_name}< or >{set_name_4}<"
+                f"{self.artifact_id}: Can not match set name to expected value: >{set_name}< or >{set_name_4}<"
             )
 
     def _format_substats(

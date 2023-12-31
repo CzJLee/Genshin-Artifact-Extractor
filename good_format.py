@@ -34,7 +34,7 @@ setKey = {
     "Vourukasha's Glow": "VourukashasGlow",
     "Golden Troupe": "GoldenTroupe",
     "Marechaussee Hunter": "MarechausseeHunter",
-    "Nighttime Whispers in the Echoing Woods": "NighttimeWhispersInTheEchoingWoods",
+    "Nighttime Whispers in the Echoing": "NighttimeWhispersInTheEchoingWoods",
     "Song of Days Past": "SongOfDaysPast",
 }
 

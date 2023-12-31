@@ -63,9 +63,9 @@ ROIS = {
     "level" :           CropROI(  38,  385,   65,   30),
     "rarity":           CropROI(  26,  290,  254,   45),
     "substats_4" :      CropROI(  59,  440,  428,  192),
-    "set_name_4" :      CropROI(  26,  629,  504,   53),
+    "set_name_4" :      CropROI(  26,  629,  540,   53),
     "substats_3" :      CropROI(  59,  440,  428,  145),
-    "set_name_3" :      CropROI(  26,  581,  504,   53),
+    "set_name_3" :      CropROI(  26,  581,  540,   53),
     "equipped" :        CropROI( 100, 1071,  511,   63),
 }
 # fmt: on
