@@ -3,6 +3,7 @@
 Edit this file when new characters and artifacts are added."""
 
 setKey = {
+    "Instructor": "Instructor",
     "Gladiator's Finale": "GladiatorsFinale",
     "Wanderer's Troupe": "WanderersTroupe",
     "Thundersoother": "Thundersoother",
@@ -33,6 +34,8 @@ setKey = {
     "Vourukasha's Glow": "VourukashasGlow",
     "Golden Troupe": "GoldenTroupe",
     "Marechaussee Hunter": "MarechausseeHunter",
+    "Nighttime Whispers in the Echoing Woods": "NighttimeWhispersInTheEchoingWoods",
+    "Song of Days Past": "SongOfDaysPast",
 }
 
 slotKey = {
@@ -78,6 +81,8 @@ location = {
     "Bennett": "Bennett",
     "Candace": "Candace",
     "Charlotte": "Charlotte",
+    "Chevreuse": "Chevreuse",
+    "Chiori": "Chiori",
     "Chongyun": "Chongyun",
     "Clorinde": "Clorinde",
     "Collei": "Collei",
@@ -91,6 +96,7 @@ location = {
     "Fischl": "Fischl",
     "Freminet": "Freminet",
     "Furina": "Furina",
+    "Gaming": "Gaming",
     "Ganyu": "Ganyu",
     "Gorou": "Gorou",
     "Hu Tao": "HuTao",
@@ -133,6 +139,7 @@ location = {
     "Wanderer": "Wanderer",
     "Wriothesley": "Wriothesley",
     "Xiangling": "Xiangling",
+    "Xianyun": "Xianyun",
     "Xiao": "Xiao",
     "Xingqiu": "Xingqiu",
     "Xinyan": "Xinyan",

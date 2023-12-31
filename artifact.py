@@ -98,6 +98,7 @@ _valid_main_stat = {
 
 # Valid set_name
 _valid_set_name = {
+    "Instructor",
     "Gladiator's Finale",
     "Wanderer's Troupe",
     "Thundersoother",
@@ -128,6 +129,8 @@ _valid_set_name = {
     "Vourukasha's Glow",
     "Marechaussee Hunter",
     "Golden Troupe",
+    "Nighttime Whispers in the Echoing Woods",
+    "Song of Days Past",
 }
 
 # Valid substats
@@ -161,6 +164,8 @@ _valid_character_names = {
     "Bennett",
     "Candace",
     "Charlotte",
+    "Chevreuse",
+    "Chiori",
     "Chongyun",
     "Collei",
     "Cyno",
@@ -169,6 +174,9 @@ _valid_character_names = {
     "Eula",
     "Faruzan",
     "Fischl",
+    "Freminet",
+    "Furina",
+    "Gaming",
     "Ganyu",
     "Gorou",
     "Hu Tao",
@@ -206,6 +214,7 @@ _valid_character_names = {
     "Venti",
     "Wanderer",
     "Xiangling",
+    "Xianyun",
     "Xiao",
     "Xingqiu",
     "Xinyan",
