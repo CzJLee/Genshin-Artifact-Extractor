@@ -1,5 +1,6 @@
 import dataclasses
 import string
+import json
 
 
 @dataclasses.dataclass()
@@ -221,7 +222,7 @@ VALID_CHARACTER_NAMES = {
     "Tartaglia",
     "Thoma",
     "Tighnari",
-    "Autumnstar",
+    "Crazy",
     "Venti",
     "Wanderer",
     "Xiangling",
@@ -236,3 +237,23 @@ VALID_CHARACTER_NAMES = {
     "Yun Jin",
     "Zhongli",
 }
+
+
+def get_artifact_max_substat_roll_values(
+    artifact_info_json_file: str = "ArtifactInfo.json",
+) -> dict[str, float]:
+    with open(artifact_info_json_file, "r", encoding="utf-8") as f:
+        artifact_info = json.loads(f.read())
+
+    max_roll_values: dict[str, float] = {}
+    for artifact_stat in artifact_info["ArtifactTiers"][0]["data"]["Substats"]:
+        stat_name = list(artifact_stat["name"].keys())[0]
+        max_roll_value = artifact_stat["rolls"][-1]
+        max_roll_values[stat_name] = max_roll_value
+
+    return max_roll_values
+
+
+MAX_ARTIFACT_SUBSTAT_ROLL_VALUES = get_artifact_max_substat_roll_values()
+
+print(MAX_ARTIFACT_SUBSTAT_ROLL_VALUES)
