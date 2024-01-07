@@ -5,7 +5,10 @@ import string
 import re
 from collections.abc import Sequence
 from typing import Any
+import editdistance
+import functools
 
+from collections.abc import Collection, Sequence
 from typing import Optional
 import os
 import constants
@@ -250,6 +253,7 @@ def filter_chars(word, whitelist=None, blacklist=None):
 
     return word
 
+
 class ArtifactImage:
     """Image of a new artifact."""
 
@@ -276,7 +280,7 @@ class Artifact:
         substats_4=None,
         artifact_id=None,
         file_path=None,
-        creation_time: datetime.datetime = None
+        creation_time: datetime.datetime = None,
     ):
         self.artifact_id = artifact_id
         self.file_path = file_path
@@ -303,16 +307,18 @@ class Artifact:
 
     def to_dict(self):
         return {
-            "artifact_type" : self.artifact_type,
-            "level" : self.level,
-            "rarity" : self.rarity,
-            "main_stat" : self.main_stat,
-            "value" : self.value,
-            "set_name" : self.set_name,
-            "substats" : self.substats,
-            "equipped" : self.equipped,
-            "artifact_id" : self.artifact_id,
-            "creation_time" : datetime.datetime.strptime(" ".join(self.artifact_id.split(" ")[-2:]), "%Y-%m-%d %H:%M:%S")
+            "artifact_type": self.artifact_type,
+            "level": self.level,
+            "rarity": self.rarity,
+            "main_stat": self.main_stat,
+            "value": self.value,
+            "set_name": self.set_name,
+            "substats": self.substats,
+            "equipped": self.equipped,
+            "artifact_id": self.artifact_id,
+            "creation_time": datetime.datetime.strptime(
+                " ".join(self.artifact_id.split(" ")[-2:]), "%Y-%m-%d %H:%M:%S"
+            ),
         }
 
     def __repr__(self) -> str:
@@ -557,3 +563,30 @@ def artifact_list_to_good_format_json(
     utils.write_json(artifacts_good_format, output_path)
     # if verbose:
     #     print(f"Created updated GI Database: {output_path}")
+
+
+@functools.cache
+def edit_distance(a: str, b: str) -> int:
+    """Returns the minimum number of operations required to convert a to b."""
+    return editdistance.distance(a, b)
+
+
+def find_closest_match(text: str, values: Collection[str], max_distance: int = 4):
+    """Returns the closest match to text in values.
+
+    Args:
+        text: The text to match.
+        values: The values to match against.
+        max_distance: The maximum edit distance allowed.
+
+    Returns:
+        The closest match to text in values.
+    """
+    closest_match = None
+    for valid_value in values:
+        distance = edit_distance(text, valid_value)
+        if distance < max_distance:
+            closest_match = valid_value
+            max_distance = distance
+
+    return closest_match
