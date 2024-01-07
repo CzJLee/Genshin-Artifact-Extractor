@@ -61,176 +61,7 @@ class InvalidEquippedError(ArtifactError):
 with open("ArtifactInfo.json", "r", encoding="utf-8") as f:
     artifact_info = json.loads(f.read())
 
-# Valid artifact_type
-VALID_ARTIFACT_TYPES = {
-    "Flower of Life",
-    "Plume of Death",
-    "Sands of Eon",
-    "Goblet of Eonothem",
-    "Circlet of Logos",
-}
 
-# Valid level
-VALID_ARTIFACT_LEVEL = set(range(1, 21))  # [1, 20]
-
-# Valid rarity
-VALID_ARTIFACT_RARITY = set(range(1, 6))  # [1, 5]
-
-# Valid main_stat
-VALID_ARTIFACT_MAIN_STATS = {
-    "HP",
-    "ATK",
-    "DEF",
-    "HP%",
-    "ATK%",
-    "DEF%",
-    "Physical DMG Bonus",
-    "Pyro DMG Bonus",
-    "Electro DMG Bonus",
-    "Cryo DMG Bonus",
-    "Hydro DMG Bonus",
-    "Anemo DMG Bonus",
-    "Geo DMG Bonus",
-    "Dendro DMG Bonus",
-    "Elemental Mastery",
-    "Energy Recharge",
-    "CRIT Rate",
-    "CRIT DMG",
-    "Healing Bonus",
-}
-
-# Valid set_name
-VALID_ARTIFACT_SET_NAMES = {
-    "Instructor",
-    "Gladiator's Finale",
-    "Wanderer's Troupe",
-    "Thundersoother",
-    "Thundering Fury",
-    "Maiden Beloved",
-    "Viridescent Venerer",
-    "Crimson Witch of Flames",
-    "Lavawalker",
-    "Noblesse Oblige",
-    "Bloodstained Chivalry",
-    "Archaic Petra",
-    "Retracing Bolide",
-    "Blizzard Strayer",
-    "Heart of Depth",
-    "Tenacity of the Millelith",
-    "Pale Flame",
-    "Emblem of Severed Fate",
-    "Shimenawa's Reminiscence",
-    "Husk of Opulent Dreams",
-    "Ocean-Hued Clam",
-    "Echoes of an Offering",
-    "Vermillion Hereafter",
-    "Deepwood Memories",
-    "Gilded Dreams",
-    "Flower of Paradise Lost",
-    "Desert Pavilion Chronicle",
-    "Nymph's Dream",
-    "Vourukasha's Glow",
-    "Marechaussee Hunter",
-    "Golden Troupe",
-    "Nighttime Whispers in the Echoing",
-    "Song of Days Past",
-}
-
-# Valid substats
-VALID_ARTIFACT_SUBSTATS = {
-    "HP",
-    "ATK",
-    "DEF",
-    "HP%",
-    "ATK%",
-    "DEF%",
-    "Elemental Mastery",
-    "Energy Recharge",
-    "CRIT Rate",
-    "CRIT DMG",
-}
-# for substat_names in artifact_info["ArtifactTiers"][0]["data"]["Substats"]:
-#     substat_name = list(substat_names["name"].keys())[0]
-#     _valid_substats.append(substat_name)
-
-# Valid character names
-# Not currently used.
-VALID_CHARACTER_NAMES = {
-    "Albedo",
-    "Aloy",
-    "Alhaitham",
-    "Amber",
-    "Arataki Itto",
-    "Baizhu",
-    "Barbara",
-    "Beidou",
-    "Bennett",
-    "Candace",
-    "Charlotte",
-    "Chevreuse",
-    "Chiori",
-    "Chongyun",
-    "Collei",
-    "Cyno",
-    "Diluc",
-    "Diona",
-    "Eula",
-    "Faruzan",
-    "Fischl",
-    "Freminet",
-    "Furina",
-    "Gaming",
-    "Ganyu",
-    "Gorou",
-    "Hu Tao",
-    "Jean",
-    "Kaedehara Kazuha",
-    "Kaeya",
-    "Kamisato Ayaka",
-    "Kamisato Ayato",
-    "Kaveh",
-    "Keqing",
-    "Kirara",
-    "Klee",
-    "Kujou Sara",
-    "Kuki Shinobu",
-    "Layla",
-    "Lisa",
-    "Mona",
-    "Nahida",
-    "Nilou",
-    "Ningguang",
-    "Noelle",
-    "Qiqi",
-    "Raiden Shogun",
-    "Razor",
-    "Rosaria",
-    "Sangonomiya Kokomi",
-    "Sayu",
-    "Shikanoin Heizou",
-    "Shenhe",
-    "Sucrose",
-    "Tartaglia",
-    "Thoma",
-    "Tighnari",
-    "Autumnstar",
-    "Venti",
-    "Wanderer",
-    "Xiangling",
-    "Xianyun",
-    "Xiao",
-    "Xingqiu",
-    "Xinyan",
-    "Yanfei",
-    "Yelan",
-    "Yae Miko",
-    "Yoimiya",
-    "Yun Jin",
-    "Zhongli",
-}
-# for character in artifact_info["Characters"]:
-#     character_name = list(character["name"].keys())[0]
-#     _valid_character_names.append(character_name)
 
 
 _whitelist_names = set(string.ascii_letters + string.whitespace + r"-'")
@@ -423,10 +254,10 @@ Artifact(
     def _format_artifact_type(self, artifact_type: str) -> str:
         artifact_type = filter_chars(artifact_type, whitelist=_whitelist_names)
         artifact_type = artifact_type.strip()
-        if artifact_type in VALID_ARTIFACT_TYPES:
+        if artifact_type in constants.VALID_ARTIFACT_TYPES:
             return artifact_type
         else:
-            print(VALID_ARTIFACT_TYPES)
+            print(constants.VALID_ARTIFACT_TYPES)
             raise InvalidArtifactTypeError(
                 f"Can not match artifact type to expected format: {artifact_type}"
             )
@@ -450,14 +281,14 @@ Artifact(
         main_stat = filter_chars(main_stat, whitelist=_whitelist_names)
         main_stat = main_stat.strip()
 
-        if main_stat in VALID_ARTIFACT_MAIN_STATS:
+        if main_stat in constants.VALID_ARTIFACT_MAIN_STATS:
             return main_stat
         else:
-            for valid_main_stat in VALID_ARTIFACT_MAIN_STATS:
+            for valid_main_stat in constants.VALID_ARTIFACT_MAIN_STATS:
                 if valid_main_stat in main_stat:
                     return valid_main_stat
 
-        print(VALID_ARTIFACT_MAIN_STATS)
+        print(constants.VALID_ARTIFACT_MAIN_STATS)
         raise InvalidMainStatError(
             f"Can not match main_stat to expected value: >{main_stat}<"
         )
@@ -470,10 +301,10 @@ Artifact(
         set_name = filter_chars(set_name, whitelist=_whitelist_names)
         set_name_4 = filter_chars(set_name_4, whitelist=_whitelist_names)
 
-        if set_name in VALID_ARTIFACT_SET_NAMES:
+        if set_name in constants.VALID_ARTIFACT_SET_NAMES:
             self.num_substats = 3
             return set_name
-        elif set_name_4 in VALID_ARTIFACT_SET_NAMES:
+        elif set_name_4 in constants.VALID_ARTIFACT_SET_NAMES:
             self.num_substats = 4
             return set_name_4
         else:
