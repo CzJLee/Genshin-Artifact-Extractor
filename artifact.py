@@ -62,8 +62,6 @@ with open("ArtifactInfo.json", "r", encoding="utf-8") as f:
     artifact_info = json.loads(f.read())
 
 
-
-
 _whitelist_names = set(string.ascii_letters + string.whitespace + r"-'")
 whitelist = set(string.ascii_letters + string.digits + string.whitespace + r".,+%':")
 blacklist = set(r".,+%':")
