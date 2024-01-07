@@ -62,7 +62,7 @@ with open("ArtifactInfo.json", "r", encoding="utf-8") as f:
     artifact_info = json.loads(f.read())
 
 # Valid artifact_type
-_valid_artifact_type = {
+VALID_ARTIFACT_TYPES = {
     "Flower of Life",
     "Plume of Death",
     "Sands of Eon",
@@ -71,13 +71,13 @@ _valid_artifact_type = {
 }
 
 # Valid level
-_valid_level = set(range(1, 21))  # [1, 20]
+VALID_ARTIFACT_LEVEL = set(range(1, 21))  # [1, 20]
 
 # Valid rarity
-_valid_rarity = set(range(1, 6))  # [1, 5]
+VALID_ARTIFACT_RARITY = set(range(1, 6))  # [1, 5]
 
 # Valid main_stat
-_valid_main_stat = {
+VALID_ARTIFACT_MAIN_STATS = {
     "HP",
     "ATK",
     "DEF",
@@ -100,7 +100,7 @@ _valid_main_stat = {
 }
 
 # Valid set_name
-_valid_set_name = {
+VALID_ARTIFACT_SET_NAMES = {
     "Instructor",
     "Gladiator's Finale",
     "Wanderer's Troupe",
@@ -137,7 +137,7 @@ _valid_set_name = {
 }
 
 # Valid substats
-_valid_substats = {
+VALID_ARTIFACT_SUBSTATS = {
     "HP",
     "ATK",
     "DEF",
@@ -155,7 +155,7 @@ _valid_substats = {
 
 # Valid character names
 # Not currently used.
-_valid_character_names = {
+VALID_CHARACTER_NAMES = {
     "Albedo",
     "Aloy",
     "Alhaitham",
@@ -232,13 +232,6 @@ _valid_character_names = {
 #     character_name = list(character["name"].keys())[0]
 #     _valid_character_names.append(character_name)
 
-valid_values = {
-    "artifact_type": _valid_artifact_type,
-    "main_stat": _valid_main_stat,
-    "set_name": _valid_set_name,
-    "substats": _valid_substats,
-    "equipped": _valid_character_names,
-}
 
 _whitelist_names = set(string.ascii_letters + string.whitespace + r"-'")
 whitelist = set(string.ascii_letters + string.digits + string.whitespace + r".,+%':")
@@ -430,10 +423,10 @@ Artifact(
     def _format_artifact_type(self, artifact_type: str) -> str:
         artifact_type = filter_chars(artifact_type, whitelist=_whitelist_names)
         artifact_type = artifact_type.strip()
-        if artifact_type in _valid_artifact_type:
+        if artifact_type in VALID_ARTIFACT_TYPES:
             return artifact_type
         else:
-            print(_valid_artifact_type)
+            print(VALID_ARTIFACT_TYPES)
             raise InvalidArtifactTypeError(
                 f"Can not match artifact type to expected format: {artifact_type}"
             )
@@ -457,14 +450,14 @@ Artifact(
         main_stat = filter_chars(main_stat, whitelist=_whitelist_names)
         main_stat = main_stat.strip()
 
-        if main_stat in _valid_main_stat:
+        if main_stat in VALID_ARTIFACT_MAIN_STATS:
             return main_stat
         else:
-            for valid_main_stat in _valid_main_stat:
+            for valid_main_stat in VALID_ARTIFACT_MAIN_STATS:
                 if valid_main_stat in main_stat:
                     return valid_main_stat
 
-        print(_valid_main_stat)
+        print(VALID_ARTIFACT_MAIN_STATS)
         raise InvalidMainStatError(
             f"Can not match main_stat to expected value: >{main_stat}<"
         )
@@ -477,10 +470,10 @@ Artifact(
         set_name = filter_chars(set_name, whitelist=_whitelist_names)
         set_name_4 = filter_chars(set_name_4, whitelist=_whitelist_names)
 
-        if set_name in _valid_set_name:
+        if set_name in VALID_ARTIFACT_SET_NAMES:
             self.num_substats = 3
             return set_name
-        elif set_name_4 in _valid_set_name:
+        elif set_name_4 in VALID_ARTIFACT_SET_NAMES:
             self.num_substats = 4
             return set_name_4
         else:
@@ -571,19 +564,19 @@ def edit_distance(a: str, b: str) -> int:
     return editdistance.distance(a, b)
 
 
-def find_closest_match(text: str, values: Collection[str], max_distance: int = 4):
-    """Returns the closest match to text in values.
+def find_closest_match(text: str, valid_values: Collection[str], max_distance: int = 4):
+    """Returns the closest match to text in valid_values.
 
     Args:
         text: The text to match.
-        values: The values to match against.
+        valid_values: The values to match against.
         max_distance: The maximum edit distance allowed.
 
     Returns:
         The closest match to text in values.
     """
     closest_match = None
-    for valid_value in values:
+    for valid_value in valid_values:
         distance = edit_distance(text, valid_value)
         if distance < max_distance:
             closest_match = valid_value
