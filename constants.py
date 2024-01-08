@@ -252,7 +252,7 @@ SUBSTAT_ROLL_VALUES_5_STAR = {
     "CRIT DMG%": [5.44, 6.22, 6.99, 7.77],
 }
 
-MAX_ARTIFACT_SUBSTAT_ROLL_VALUES = {
+MAX_ARTIFACT_SUBSTAT_ROLL_VALUES_5_STAR = {
     substat_name: values[-1]
     for substat_name, values in SUBSTAT_ROLL_VALUES_5_STAR.items()
 }

@@ -94,7 +94,7 @@ class Artifact:
         main_stat: str = None,
         value: str = None,
         set_name: str = None,
-        substats: Sequence[str] = None,
+        substats: dict[str, float] = None,
         equipped: str = None,
         set_name_3: str = None,
         set_name_4: str = None,
@@ -136,6 +136,8 @@ class Artifact:
             "value": self.value,
             "set_name": self.set_name,
             "substats": self.substats,
+            "roll_value": self.roll_value,
+            "crit_value": self.crit_value,
             "equipped": self.equipped,
             "artifact_id": self.artifact_id,
             "creation_time": datetime.datetime.strptime(
@@ -345,6 +347,16 @@ Artifact(
         else:
             return None
 
+    @property
+    def roll_value(self) -> int:
+        """Returns the current artifact roll value."""
+        return roll_value(self.substats)
+    
+    @property
+    def crit_value(self) -> float:
+        """Returns the current artifact crit value."""
+        return crit_value(self.substats)
+
     @classmethod
     def from_ocr_json(cls, ocr_json: dict) -> Artifact:
         return cls(
@@ -361,6 +373,24 @@ Artifact(
             artifact_id=ocr_json["artifact_id"],
         )
 
+def roll_value(substats: dict[str, float]) -> int:
+    """Calculates the current artifact roll value."""
+    total_roll_value = 0
+    for substat_name, value in substats.items():
+        total_roll_value += round(
+            value / constants.MAX_ARTIFACT_SUBSTAT_ROLL_VALUES_5_STAR[substat_name], 1
+        )
+    return round(100 * total_roll_value)
+
+def crit_value(substats: dict[str, float]) -> float:
+    """Calculates the current artifact crit value."""
+    total_crit_value = 0
+    for substat_name, value in substats.items():
+        if substat_name == "CRIT Rate%":
+            total_crit_value += value * 2
+        elif substat_name == "CRIT DMG%":
+            total_crit_value += value
+    return total_crit_value
 
 def artifact_list_to_good_format_json(
     artifact_list: list[Artifact],
